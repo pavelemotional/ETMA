@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ensureAdminExists } from './initAdmin';
 import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
 import CardsPage from './pages/CardsPage';
@@ -36,6 +38,10 @@ function AppRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    ensureAdminExists();
+  }, []);
+
   return (
     <HashRouter>
       <AuthProvider>
