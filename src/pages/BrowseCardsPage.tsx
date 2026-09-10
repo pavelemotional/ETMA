@@ -264,7 +264,9 @@ const BrowseCardsPage: React.FC = () => {
 
                   {/* Image */}
                   {card.imageUrl && (
-                    <img src={card.imageUrl} alt="" className="w-full h-32 object-cover rounded-xl mb-3" />
+                    <div className="bg-gray-900 rounded-xl overflow-hidden mb-3">
+                      <img src={card.imageUrl} alt="" className="w-full h-40 object-contain" />
+                    </div>
                   )}
 
                   {/* Title */}

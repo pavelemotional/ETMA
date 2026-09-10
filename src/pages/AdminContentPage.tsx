@@ -20,6 +20,10 @@ const AdminContentPage: React.FC = () => {
   const [editingCard, setEditingCard] = useState<Card | null>(null);
   const [showCardModal, setShowCardModal] = useState(false);
   
+  // Delete confirmation
+  const [cardToDelete, setCardToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   // Category editing
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -69,22 +73,16 @@ const AdminContentPage: React.FC = () => {
   };
 
   const deleteCard = async (id: string) => {
-    console.log('🗑️ Starting delete for card ID:', id);
+    setIsDeleting(true);
     try {
-      const cardRef = doc(db, 'cards', id);
-      console.log('📄 Card reference created:', cardRef.path);
-      
-      await deleteDoc(cardRef);
-      console.log('✅ Card deleted from Firestore successfully');
-      
+      await deleteDoc(doc(db, 'cards', id));
       await loadData();
-      console.log('🔄 Data reloaded after deletion');
-      
-      alert('✅ Карточка успешно удалена');
+      setCardToDelete(null);
     } catch (error) {
-      console.error('❌ Error deleting card:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-      alert('❌ Ошибка при удалении карточки: ' + errorMessage);
+      console.error('Error deleting card:', error);
+      alert('Ошибка при удалении: ' + (error as Error).message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -228,10 +226,25 @@ const AdminContentPage: React.FC = () => {
                         <span className="px-2 py-1 bg-purple-600/30 text-purple-300 rounded text-xs">
                           {categories.find(c => c.id === card.categoryId)?.name || '—'}
                         </span>
-                        <button onClick={() => { setEditingCard(card); setShowCardModal(true); }} className="text-blue-400 hover:text-blue-300 text-sm">✏️</button>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => { setEditingCard(card); setShowCardModal(true); }} 
+                            className="text-blue-400 hover:text-blue-300 text-sm"
+                            title="Редактировать"
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            onClick={() => setCardToDelete(card.id)} 
+                            className="text-red-400 hover:text-red-300 text-sm"
+                            title="Удалить"
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       </div>
                       {card.imageUrl && (
-                        <img src={card.imageUrl} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />
+                        <img src={card.imageUrl} alt="" className="w-full h-40 object-contain bg-gray-900 rounded-lg mb-2" />
                       )}
                       {card.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
@@ -349,13 +362,6 @@ const AdminContentPage: React.FC = () => {
           tags={tags}
           fields={fields}
           onSave={saveCard}
-          onDelete={editingCard ? async () => {
-            console.log('🎯 onDelete called for card:', editingCard.id);
-            await deleteCard(editingCard.id);
-            console.log('🚪 Closing modal after deletion');
-            setShowCardModal(false);
-            setEditingCard(null);
-          } : undefined}
           onClose={() => { setShowCardModal(false); setEditingCard(null); }}
         />
       )}
@@ -392,6 +398,34 @@ const AdminContentPage: React.FC = () => {
           onClose={() => { setShowFieldModal(false); setEditingField(null); }}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      {cardToDelete && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-700">
+            <h3 className="text-xl font-bold text-white mb-4">🗑️ Удалить карточку?</h3>
+            <p className="text-gray-300 mb-6">
+              Вы уверены, что хотите удалить эту карточку? Это действие нельзя отменить.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => deleteCard(cardToDelete)}
+                disabled={isDeleting}
+                className="flex-1 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-not-allowed text-white rounded-lg transition font-medium"
+              >
+                {isDeleting ? 'Удаление...' : 'Удалить'}
+              </button>
+              <button
+                onClick={() => setCardToDelete(null)}
+                disabled={isDeleting}
+                className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -403,9 +437,8 @@ const CardModal: React.FC<{
   tags: Tag[];
   fields: FieldDefinition[];
   onSave: (card: Partial<Card>) => void;
-  onDelete?: () => void;
   onClose: () => void;
-}> = ({ card, categories, tags, fields, onSave, onDelete, onClose }) => {
+}> = ({ card, categories, tags, fields, onSave, onClose }) => {
   const [categoryId, setCategoryId] = useState(card?.categoryId || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(card?.tags || []);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(card?.fields || {});
@@ -420,25 +453,6 @@ const CardModal: React.FC<{
       fields: fieldValues,
       imageUrl,
     });
-  };
-
-  const handleDelete = () => {
-    console.log('🗑️ Delete button clicked');
-    console.log('📋 Card data:', card);
-    console.log('🔗 onDelete function exists:', !!onDelete);
-    
-    if (window.confirm('Вы уверены, что хотите удалить эту карточку?\n\nЭто действие нельзя отменить.')) {
-      console.log('✅ User confirmed deletion');
-      if (onDelete) {
-        console.log('🚀 Calling onDelete function');
-        onDelete();
-      } else {
-        console.error('❌ onDelete function is not defined!');
-        alert('Ошибка: функция удаления не настроена');
-      }
-    } else {
-      console.log('❌ User cancelled deletion');
-    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -536,8 +550,8 @@ const CardModal: React.FC<{
           <div>
             <label className="text-sm text-gray-400 mb-1 block">Изображение</label>
             {imageUrl ? (
-              <div className="relative">
-                <img src={imageUrl} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
+              <div className="relative bg-gray-900 rounded-lg overflow-hidden">
+                <img src={imageUrl} alt="Preview" className="w-full h-48 object-contain" />
                 <button
                   type="button"
                   onClick={handleRemoveImage}
@@ -574,21 +588,6 @@ const CardModal: React.FC<{
             </button>
           </div>
         </form>
-        {card && onDelete && (
-          <div className="pt-3 border-t border-gray-700 mt-3">
-            <button 
-              type="button" 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleDelete();
-              }}
-              className="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
-            >
-              🗑️ Удалить карточку
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

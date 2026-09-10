@@ -266,8 +266,8 @@ const CardsPage: React.FC = () => {
                     </div>
                     
                     {currentCard.imageUrl && (
-                      <div className="mb-6">
-                        <img src={currentCard.imageUrl} alt="" className="w-full h-48 object-cover rounded-xl" />
+                      <div className="mb-6 bg-gray-900 rounded-xl overflow-hidden">
+                        <img src={currentCard.imageUrl} alt="" className="w-full h-48 object-contain" />
                       </div>
                     )}
 
@@ -293,8 +293,8 @@ const CardsPage: React.FC = () => {
                   {/* Back */}
                   <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 glass rounded-3xl p-8 shadow-2xl overflow-y-auto max-h-[500px]">
                     {currentCard.imageUrl && (
-                      <div className="mb-6">
-                        <img src={currentCard.imageUrl} alt="" className="w-full h-48 object-cover rounded-xl" />
+                      <div className="mb-6 bg-gray-900 rounded-xl overflow-hidden">
+                        <img src={currentCard.imageUrl} alt="" className="w-full h-48 object-contain" />
                       </div>
                     )}
                     <h3 className="text-xl font-bold text-white mb-6 text-center">Полная информация</h3>
