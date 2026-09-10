@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ensureAdminExists } from './initAdmin';
+import { seedWines } from './seedWines';
 import { seedKitchen } from './seedKitchen';
 import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
@@ -41,6 +42,7 @@ function AppRoutes() {
 function App() {
   useEffect(() => {
     ensureAdminExists();
+    seedWines();
     seedKitchen();
   }, []);
 
