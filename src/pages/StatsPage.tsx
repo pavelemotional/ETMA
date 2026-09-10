@@ -65,7 +65,7 @@ const StatsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Загрузка...</div>
+        <div className="text-white text-xl animate-pulse">Загрузка...</div>
       </div>
     );
   }
@@ -74,30 +74,28 @@ const StatsPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl">←</button>
-            <h1 className="text-2xl font-bold text-white">📊 Моя статистика</h1>
-          </div>
+        <div className="flex items-center gap-3 mb-8 animate-fade-in">
+          <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl hover-lift">←</button>
+          <h1 className="text-2xl font-bold text-white">📊 Моя статистика</h1>
         </div>
 
         {/* Overall Stats */}
-        <div className="bg-gray-800/50 rounded-2xl p-6 mb-8 border border-gray-700">
+        <div className="glass rounded-3xl p-6 mb-8 animate-fade-in">
           <h2 className="text-xl font-bold text-white mb-4">Общая статистика</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-700/50 rounded-xl p-4 text-center">
+            <div className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 rounded-2xl p-4 text-center hover-lift">
               <div className="text-3xl font-bold text-purple-400">{overallStats.studiedCards}</div>
               <div className="text-sm text-gray-400 mt-1">Изучено карточек</div>
             </div>
-            <div className="bg-gray-700/50 rounded-xl p-4 text-center">
+            <div className="bg-gradient-to-br from-green-600/20 to-green-800/20 rounded-2xl p-4 text-center hover-lift">
               <div className="text-3xl font-bold text-green-400">{overallStats.learnedCards}</div>
               <div className="text-sm text-gray-400 mt-1">Выучено</div>
             </div>
-            <div className="bg-gray-700/50 rounded-xl p-4 text-center">
+            <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded-2xl p-4 text-center hover-lift">
               <div className="text-3xl font-bold text-blue-400">{overallStats.totalViews}</div>
               <div className="text-sm text-gray-400 mt-1">Всего просмотров</div>
             </div>
-            <div className="bg-gray-700/50 rounded-xl p-4 text-center">
+            <div className="bg-gradient-to-br from-amber-600/20 to-amber-800/20 rounded-2xl p-4 text-center hover-lift">
               <div className="text-3xl font-bold text-amber-400">{overallStats.accuracy}%</div>
               <div className="text-sm text-gray-400 mt-1">Точность</div>
             </div>
@@ -106,11 +104,11 @@ const StatsPage: React.FC = () => {
 
         {/* Per-entity Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {entities.map(entity => {
+          {entities.map((entity, index) => {
             const stats = getStatsForEntity(entity);
             const progressPercent = stats.totalCards > 0 ? Math.round((stats.studiedCards / stats.totalCards) * 100) : 0;
             return (
-              <div key={entity} className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+              <div key={entity} className="glass rounded-3xl p-6 hover-lift animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-3xl">{ENTITY_ICONS[entity]}</span>
                   <h3 className="text-lg font-bold text-white">{ENTITY_LABELS[entity]}</h3>
@@ -121,16 +119,16 @@ const StatsPage: React.FC = () => {
                     <span className="text-gray-400">Прогресс</span>
                     <span className="text-white">{stats.studiedCards}/{stats.totalCards}</span>
                   </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div className="bg-purple-600 h-2 rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
+                  <div className="w-full bg-gray-800 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 mt-4">
-                    <div className="bg-gray-700/50 rounded-lg p-3 text-center">
+                    <div className="bg-green-600/10 rounded-xl p-3 text-center">
                       <div className="text-lg font-bold text-green-400">{stats.learnedCards}</div>
                       <div className="text-xs text-gray-400">Выучено</div>
                     </div>
-                    <div className="bg-gray-700/50 rounded-lg p-3 text-center">
+                    <div className="bg-amber-600/10 rounded-xl p-3 text-center">
                       <div className="text-lg font-bold text-amber-400">{stats.accuracy}%</div>
                       <div className="text-xs text-gray-400">Точность</div>
                     </div>
@@ -142,7 +140,7 @@ const StatsPage: React.FC = () => {
         </div>
 
         {/* Category breakdown */}
-        <div className="mt-8 bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+        <div className="mt-8 glass rounded-3xl p-6 animate-fade-in">
           <h2 className="text-xl font-bold text-white mb-4">По категориям</h2>
           <div className="space-y-3">
             {categories.map(cat => {
@@ -154,8 +152,8 @@ const StatsPage: React.FC = () => {
               return (
                 <div key={cat.id} className="flex items-center gap-4">
                   <div className="w-32 text-sm text-gray-300 truncate">{cat.name}</div>
-                  <div className="flex-1 bg-gray-700 rounded-full h-3">
-                    <div className="bg-green-500 h-3 rounded-full transition-all" style={{ width: `${percent}%` }} />
+                  <div className="flex-1 bg-gray-800 rounded-full h-3">
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all" style={{ width: `${percent}%` }} />
                   </div>
                   <div className="text-sm text-gray-400 w-20 text-right">
                     {learned}/{catCards.length}

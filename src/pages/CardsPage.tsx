@@ -19,7 +19,6 @@ const CardsPage: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [mode, setMode] = useState<'browse' | 'study'>('browse');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,31 +29,26 @@ const CardsPage: React.FC = () => {
     if (!entityType) return;
     setLoading(true);
     try {
-      // Load categories
       const catQ = query(collection(db, 'categories'), where('entityType', '==', entityType));
       const catSnap = await getDocs(catQ);
       const cats = catSnap.docs.map(d => ({ id: d.id, ...d.data() } as Category));
       setCategories(cats);
 
-      // Load tags
       const tagQ = query(collection(db, 'tags'), where('entityType', '==', entityType));
       const tagSnap = await getDocs(tagQ);
       const tgs = tagSnap.docs.map(d => ({ id: d.id, ...d.data() } as Tag));
       setTags(tgs);
 
-      // Load fields
       const fieldQ = query(collection(db, 'fieldDefinitions'), where('entityType', '==', entityType));
       const fieldSnap = await getDocs(fieldQ);
       const flds = fieldSnap.docs.map(d => ({ id: d.id, ...d.data() } as FieldDefinition)).sort((a, b) => a.order - b.order);
       setFields(flds);
 
-      // Load cards
       const cardQ = query(collection(db, 'cards'), where('entityType', '==', entityType));
       const cardSnap = await getDocs(cardQ);
       const crds = cardSnap.docs.map(d => ({ id: d.id, ...d.data() } as Card));
       setCards(crds);
 
-      // Load progress
       if (user) {
         const progQ = query(collection(db, 'progress'), where('userId', '==', user.id), where('entityType', '==', entityType));
         const progSnap = await getDocs(progQ);
@@ -128,7 +122,7 @@ const CardsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Загрузка...</div>
+        <div className="text-white text-xl animate-pulse">Загрузка...</div>
       </div>
     );
   }
@@ -137,38 +131,21 @@ const CardsPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl">←</button>
-            <span className="text-3xl">{ENTITY_ICONS[entityType!]}</span>
-            <h1 className="text-2xl font-bold text-white">{ENTITY_LABELS[entityType!]}</h1>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => { setMode('browse'); setCurrentIndex(0); setIsFlipped(false); }}
-              className={`px-4 py-2 rounded-lg transition text-sm ${mode === 'browse' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
-            >
-              📋 Просмотр
-            </button>
-            <button
-              onClick={() => { setMode('study'); setCurrentIndex(0); setIsFlipped(false); }}
-              className={`px-4 py-2 rounded-lg transition text-sm ${mode === 'study' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
-            >
-              🎓 Изучение
-            </button>
-          </div>
+        <div className="flex items-center gap-3 mb-6 animate-fade-in">
+          <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl hover-lift">←</button>
+          <span className="text-3xl">{ENTITY_ICONS[entityType!]}</span>
+          <h1 className="text-2xl font-bold text-white">{ENTITY_LABELS[entityType!]}</h1>
         </div>
 
         {/* Filters */}
-        <div className="bg-gray-800/50 rounded-xl p-4 mb-6 border border-gray-700">
+        <div className="glass rounded-2xl p-4 mb-6 animate-fade-in">
           <div className="flex flex-wrap gap-4">
-            {/* Category filter */}
             <div>
               <label className="text-xs text-gray-400 mb-1 block">Категория</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => { setSelectedCategory(e.target.value); setCurrentIndex(0); setIsFlipped(false); }}
-                className="bg-gray-700 text-white rounded-lg px-3 py-2 text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="bg-gray-800/50 text-white rounded-xl px-3 py-2 text-sm border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
               >
                 <option value="all">Все категории</option>
                 {categories.map(cat => (
@@ -176,7 +153,6 @@ const CardsPage: React.FC = () => {
                 ))}
               </select>
             </div>
-            {/* Tags filter */}
             {tags.length > 0 && (
               <div>
                 <label className="text-xs text-gray-400 mb-1 block">Теги</label>
@@ -191,10 +167,10 @@ const CardsPage: React.FC = () => {
                         setCurrentIndex(0);
                         setIsFlipped(false);
                       }}
-                      className={`px-3 py-1 rounded-full text-xs transition ${
+                      className={`px-3 py-1 rounded-full text-xs transition hover-lift ${
                         selectedTags.includes(tag.id)
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                          : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
                       }`}
                     >
                       {tag.name}
@@ -211,21 +187,21 @@ const CardsPage: React.FC = () => {
 
         {/* Card Display */}
         {filteredCards.length === 0 ? (
-          <div className="text-center py-20">
+          <div className="text-center py-20 animate-fade-in">
             <div className="text-6xl mb-4">📭</div>
             <p className="text-gray-400 text-lg">Нет карточек для отображения</p>
           </div>
         ) : currentCard ? (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center animate-fade-in">
             {/* Progress indicator */}
             <div className="w-full max-w-2xl mb-4">
               <div className="flex justify-between text-sm text-gray-400 mb-1">
                 <span>Карточка {currentIndex + 1} из {filteredCards.length}</span>
                 <span>{Math.round(((currentIndex + 1) / filteredCards.length) * 100)}%</span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-gray-800 rounded-full h-2">
                 <div
-                  className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${((currentIndex + 1) / filteredCards.length) * 100}%` }}
                 />
               </div>
@@ -238,14 +214,14 @@ const CardsPage: React.FC = () => {
             >
               <div className={`grid transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                 {/* Front */}
-                <div className="col-start-1 row-start-1 backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 p-8 shadow-2xl">
+                <div className="col-start-1 row-start-1 backface-hidden glass rounded-3xl p-8 shadow-2xl">
                   <div className="flex justify-between items-start mb-6">
                     <span className="px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-sm">
                       {getCategoryName(currentCard.categoryId)}
                     </span>
                     <div className="flex gap-1 flex-wrap justify-end">
                       {currentCard.tags.map(tagId => (
-                        <span key={tagId} className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs">
+                        <span key={tagId} className="px-2 py-1 bg-gray-800/50 text-gray-300 rounded text-xs">
                           {getTagName(tagId)}
                         </span>
                       ))}
@@ -272,7 +248,7 @@ const CardsPage: React.FC = () => {
                 </div>
 
                 {/* Back */}
-                <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 p-8 shadow-2xl">
+                <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 glass rounded-3xl p-8 shadow-2xl">
                   <h3 className="text-xl font-bold text-white mb-6 text-center">Полная информация</h3>
                   <div className="space-y-4">
                     {fields.map(field => {
@@ -294,17 +270,17 @@ const CardsPage: React.FC = () => {
             </div>
 
             {/* Study mode controls */}
-            {mode === 'study' && isFlipped && (
-              <div className="flex gap-4 mt-6">
+            {isFlipped && (
+              <div className="flex gap-4 mt-6 animate-fade-in">
                 <button
                   onClick={() => markStudied(false)}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition font-medium"
+                  className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl transition font-medium hover-lift"
                 >
                   ❌ Не знаю
                 </button>
                 <button
                   onClick={() => markStudied(true)}
-                  className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl transition font-medium"
+                  className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition font-medium hover-lift"
                 >
                   ✅ Знаю
                 </button>
@@ -316,14 +292,14 @@ const CardsPage: React.FC = () => {
               <button
                 onClick={() => { setCurrentIndex(prev => Math.max(0, prev - 1)); setIsFlipped(false); }}
                 disabled={currentIndex === 0}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition"
+                className="px-4 py-2 glass hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition hover-lift"
               >
                 ← Назад
               </button>
               <button
                 onClick={() => { setCurrentIndex(prev => Math.min(filteredCards.length - 1, prev + 1)); setIsFlipped(false); }}
                 disabled={currentIndex >= filteredCards.length - 1}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition"
+                className="px-4 py-2 glass hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition hover-lift"
               >
                 Вперёд →
               </button>

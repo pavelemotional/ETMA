@@ -25,7 +25,6 @@ const AdminUsersPage: React.FC = () => {
       const usersData = snap.docs.map(d => ({ id: d.id, ...d.data() } as User));
       setUsers(usersData);
 
-      // Load stats for each user
       const progSnap = await getDocs(collection(db, 'progress'));
       const allProgress = progSnap.docs.map(d => ({ id: d.id, ...d.data() } as StudyProgress));
       
@@ -79,7 +78,7 @@ const AdminUsersPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Загрузка...</div>
+        <div className="text-white text-xl animate-pulse">Загрузка...</div>
       </div>
     );
   }
@@ -88,14 +87,14 @@ const AdminUsersPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8 animate-fade-in">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl">←</button>
+            <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl hover-lift">←</button>
             <h1 className="text-2xl font-bold text-white">👥 Пользователи</h1>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition text-sm font-medium"
+            className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition text-sm font-medium hover-lift"
           >
             + Создать пользователя
           </button>
@@ -103,10 +102,10 @@ const AdminUsersPage: React.FC = () => {
 
         {/* Users List */}
         <div className="space-y-3">
-          {users.map(user => (
-            <div key={user.id} className="bg-gray-800/50 rounded-xl p-5 border border-gray-700 flex justify-between items-center">
+          {users.map((user, index) => (
+            <div key={user.id} className="glass rounded-2xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover-lift animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-purple-600/30 rounded-full flex items-center justify-center text-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-lg font-bold text-white">
                   {user.username.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -124,15 +123,15 @@ const AdminUsersPage: React.FC = () => {
               <div className="flex items-center gap-6">
                 <div className="text-right">
                   <div className="text-sm text-gray-400">
-                    Изучено: <span className="text-white">{userStats[user.id]?.studied || 0}</span>
+                    Изучено: <span className="text-white font-medium">{userStats[user.id]?.studied || 0}</span>
                   </div>
                   <div className="text-sm text-gray-400">
-                    Выучено: <span className="text-green-400">{userStats[user.id]?.learned || 0}</span>
+                    Выучено: <span className="text-green-400 font-medium">{userStats[user.id]?.learned || 0}</span>
                   </div>
                 </div>
                 <button
                   onClick={() => deleteUser(user.id)}
-                  className="px-3 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg transition text-sm"
+                  className="px-3 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-xl transition text-sm hover-lift"
                 >
                   🗑️ Удалить
                 </button>
@@ -142,7 +141,7 @@ const AdminUsersPage: React.FC = () => {
         </div>
 
         {users.length === 0 && (
-          <div className="text-center py-20">
+          <div className="text-center py-20 animate-fade-in">
             <div className="text-6xl mb-4">👤</div>
             <p className="text-gray-400">Нет пользователей</p>
             <p className="text-gray-500 text-sm mt-1">Создайте первого пользователя</p>
@@ -152,8 +151,8 @@ const AdminUsersPage: React.FC = () => {
 
       {/* Create User Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-700">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="glass rounded-3xl p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-white mb-6">Создать пользователя</h2>
             <form onSubmit={createUser} className="space-y-4">
               <div>
@@ -163,7 +162,7 @@ const AdminUsersPage: React.FC = () => {
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
                   required
-                  className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-gray-800/50 text-white rounded-xl px-3 py-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
                   placeholder="Введите имя"
                 />
               </div>
@@ -174,7 +173,7 @@ const AdminUsersPage: React.FC = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-gray-800/50 text-white rounded-xl px-3 py-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
                   placeholder="Введите пароль"
                 />
               </div>
@@ -184,15 +183,15 @@ const AdminUsersPage: React.FC = () => {
                   id="isAdmin"
                   checked={newIsAdmin}
                   onChange={(e) => setNewIsAdmin(e.target.checked)}
-                  className="w-4 h-4 rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500"
+                  className="w-4 h-4 rounded bg-gray-800 border-gray-700 text-purple-600 focus:ring-purple-500"
                 />
                 <label htmlFor="isAdmin" className="text-sm text-gray-300">Администратор</label>
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="submit" className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium">
+                <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition font-medium">
                   Создать
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2 glass hover:bg-white/10 text-white rounded-xl transition">
                   Отмена
                 </button>
               </div>
