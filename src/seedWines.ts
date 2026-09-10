@@ -1,14 +1,21 @@
-import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 
-export const seedWines = async () => {
+export const seedWines = async (force: boolean = false) => {
   try {
     const wineCardsQ = query(collection(db, 'cards'), where('entityType', '==', 'wine'));
     const wineCardsSnap = await getDocs(wineCardsQ);
     
-    if (!wineCardsSnap.empty) {
+    if (!wineCardsSnap.empty && !force) {
       console.log('Wines already seeded, skipping...');
-      return;
+      return { success: false, message: 'Wines already exist' };
+    }
+
+    if (force && !wineCardsSnap.empty) {
+      console.log('Force seeding: clearing existing wines...');
+      for (const doc of wineCardsSnap.docs) {
+        await deleteDoc(doc.ref);
+      }
     }
 
     console.log('Seeding wines...');
@@ -113,7 +120,9 @@ export const seedWines = async () => {
     }
 
     console.log(`Successfully seeded ${wines.length} wines!`);
+    return { success: true, message: `Seeded ${wines.length} wines` };
   } catch (error) {
     console.error('Error seeding wines:', error);
+    return { success: false, message: 'Error seeding wines' };
   }
 };

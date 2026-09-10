@@ -1,15 +1,22 @@
-import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 
-export const seedKitchen = async () => {
+export const seedKitchen = async (force: boolean = false) => {
   try {
     // Check if kitchen cards already exist
     const kitchenCardsQ = query(collection(db, 'cards'), where('entityType', '==', 'kitchen'));
     const kitchenCardsSnap = await getDocs(kitchenCardsQ);
     
-    if (!kitchenCardsSnap.empty) {
+    if (!kitchenCardsSnap.empty && !force) {
       console.log('Kitchen already seeded, skipping...');
-      return;
+      return { success: false, message: 'Kitchen already exists' };
+    }
+
+    if (force && !kitchenCardsSnap.empty) {
+      console.log('Force seeding: clearing existing kitchen...');
+      for (const doc of kitchenCardsSnap.docs) {
+        await deleteDoc(doc.ref);
+      }
     }
 
     console.log('Seeding kitchen...');
@@ -121,7 +128,9 @@ export const seedKitchen = async () => {
     }
 
     console.log(`Successfully seeded ${dishes.length} kitchen dishes!`);
+    return { success: true, message: `Seeded ${dishes.length} kitchen dishes` };
   } catch (error) {
     console.error('Error seeding kitchen:', error);
+    return { success: false, message: 'Error seeding kitchen' };
   }
 };

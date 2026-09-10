@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Card, Category, Tag, EntityType, ENTITY_LABELS, FieldDefinition } from '../types';
+import { seedWines } from '../seedWines';
+import { seedKitchen } from '../seedKitchen';
 
 type Tab = 'cards' | 'categories' | 'tags' | 'fields';
 
@@ -147,6 +149,32 @@ const AdminContentPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl">←</button>
             <h1 className="text-2xl font-bold text-white">✏️ Управление контентом</h1>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                if (confirm('Загрузить все вина? (существующие будут удалены)')) {
+                  const result = await seedWines(true);
+                  if (result) alert(result.message);
+                  loadData();
+                }
+              }}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition text-sm"
+            >
+              🍷 Загрузить вина
+            </button>
+            <button
+              onClick={async () => {
+                if (confirm('Загрузить всю кухню? (существующие будут удалены)')) {
+                  const result = await seedKitchen(true);
+                  if (result) alert(result.message);
+                  loadData();
+                }
+              }}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition text-sm"
+            >
+              🍽️ Загрузить кухню
+            </button>
           </div>
         </div>
 
