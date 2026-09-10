@@ -8,6 +8,7 @@ import { seedBar } from './seedBar';
 import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
 import CardsPage from './pages/CardsPage';
+import BrowseCardsPage from './pages/BrowseCardsPage';
 import StatsPage from './pages/StatsPage';
 import AdminContentPage from './pages/AdminContentPage';
 import AdminStatsPage from './pages/AdminStatsPage';
@@ -31,6 +32,7 @@ function AppRoutes() {
       <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage />} />
       <Route path="/" element={<ProtectedRoute><MainPage /></ProtectedRoute>} />
       <Route path="/cards/:entityType" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
+      <Route path="/browse" element={<ProtectedRoute><BrowseCardsPage /></ProtectedRoute>} />
       <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
       <Route path="/admin/content" element={<ProtectedRoute adminOnly><AdminContentPage /></ProtectedRoute>} />
       <Route path="/admin/stats" element={<ProtectedRoute adminOnly><AdminStatsPage /></ProtectedRoute>} />

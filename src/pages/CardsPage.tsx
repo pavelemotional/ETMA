@@ -111,9 +111,29 @@ const CardsPage: React.FC = () => {
     }
     
     setIsFlipped(false);
-    if (currentIndex < filteredCards.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    }
+    // Умная система: выбираем следующую карточку с меньшим счетчиком
+    selectNextCard();
+  };
+
+  const selectNextCard = () => {
+    if (filteredCards.length === 0) return;
+    
+    // Сортируем карточки по количеству правильных ответов (меньше = приоритетнее)
+    const sortedCards = [...filteredCards].sort((a, b) => {
+      const progA = progress[`${user?.id}_${a.id}`];
+      const progB = progress[`${user?.id}_${b.id}`];
+      const correctA = progA?.timesCorrect || 0;
+      const correctB = progB?.timesCorrect || 0;
+      return correctA - correctB;
+    });
+    
+    // Берем одну из первых 3 карточек с наименьшим счетчиком (рандомизация)
+    const topCards = sortedCards.slice(0, Math.min(3, sortedCards.length));
+    const randomIndex = Math.floor(Math.random() * topCards.length);
+    const nextCard = topCards[randomIndex];
+    
+    const newIndex = filteredCards.findIndex(c => c.id === nextCard.id);
+    setCurrentIndex(newIndex >= 0 ? newIndex : 0);
   };
 
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || '—';
@@ -139,23 +159,41 @@ const CardsPage: React.FC = () => {
 
         {/* Filters */}
         <div className="glass rounded-2xl p-4 mb-6 animate-fade-in">
-          <div className="flex flex-wrap gap-4">
+          <div className="space-y-3">
+            {/* Categories as chips */}
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Категория</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => { setSelectedCategory(e.target.value); setCurrentIndex(0); setIsFlipped(false); }}
-                className="bg-gray-800/50 text-white rounded-xl px-3 py-2 text-sm border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-              >
-                <option value="all">Все категории</option>
+              <label className="text-xs text-gray-400 mb-2 block">Категории</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => { setSelectedCategory('all'); setCurrentIndex(0); setIsFlipped(false); }}
+                  className={`px-4 py-2 rounded-full text-sm transition hover-lift ${
+                    selectedCategory === 'all'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Все
+                </button>
                 {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  <button
+                    key={cat.id}
+                    onClick={() => { setSelectedCategory(cat.id); setCurrentIndex(0); setIsFlipped(false); }}
+                    className={`px-4 py-2 rounded-full text-sm transition hover-lift ${
+                      selectedCategory === cat.id
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
+            
+            {/* Tags as chips */}
             {tags.length > 0 && (
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">Теги</label>
+                <label className="text-xs text-gray-400 mb-2 block">Теги</label>
                 <div className="flex flex-wrap gap-2">
                   {tags.map(tag => (
                     <button
@@ -167,9 +205,9 @@ const CardsPage: React.FC = () => {
                         setCurrentIndex(0);
                         setIsFlipped(false);
                       }}
-                      className={`px-3 py-1 rounded-full text-xs transition hover-lift ${
+                      className={`px-3 py-1.5 rounded-full text-xs transition hover-lift ${
                         selectedTags.includes(tag.id)
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg'
                           : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
                       }`}
                     >
@@ -282,6 +320,18 @@ const CardsPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Progress counter */}
+              {currentCard && user && (
+                <div className="absolute top-4 right-4 z-10">
+                  <div className="glass rounded-full px-4 py-2 flex items-center gap-2">
+                    <span className="text-green-400 text-sm font-bold">
+                      {progress[`${user.id}_${currentCard.id}`]?.timesCorrect || 0}
+                    </span>
+                    <span className="text-gray-400 text-xs">правильных</span>
+                  </div>
+                </div>
+              )}
+
               {/* Buttons - Fixed at bottom */}
               <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-4">
                 {/* Study mode controls */}
@@ -291,13 +341,13 @@ const CardsPage: React.FC = () => {
                       onClick={() => markStudied(false)}
                       className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl transition font-medium hover-lift"
                     >
-                      ❌ Не знаю
+                      ❌ Неправильно
                     </button>
                     <button
                       onClick={() => markStudied(true)}
                       className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition font-medium hover-lift"
                     >
-                      ✅ Знаю
+                      ✅ Правильно
                     </button>
                   </div>
                 )}

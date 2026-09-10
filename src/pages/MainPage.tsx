@@ -34,6 +34,12 @@ const MainPage: React.FC = () => {
           </div>
           <div className="flex flex-wrap gap-2">
             <button
+              onClick={() => navigate('/browse')}
+              className="px-4 py-2 glass hover:bg-white/10 text-white rounded-xl transition text-sm hover-lift"
+            >
+              📚 Все карточки
+            </button>
+            <button
               onClick={() => navigate('/stats')}
               className="px-4 py-2 glass hover:bg-white/10 text-white rounded-xl transition text-sm hover-lift"
             >
