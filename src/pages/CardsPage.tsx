@@ -253,14 +253,12 @@ const CardsPage: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-col items-center justify-center h-[280px]">
-                    {fields.map(field => {
+                    {fields.slice(0, 1).map(field => {
                       const value = currentCard.fields[field.id];
                       if (!value) return null;
-                      const isFirst = fields.filter(f => currentCard.fields[f.id]).indexOf(field) === 0;
                       return (
-                        <div key={field.id} className={`${isFirst ? 'mb-6' : 'mb-3'} text-center`}>
-                          <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">{field.name}</div>
-                          <div className={`${isFirst ? 'text-3xl font-bold text-white' : 'text-lg text-gray-300'}`}>
+                        <div key={field.id} className="text-center">
+                          <div className="text-3xl font-bold text-white">
                             {value}
                           </div>
                         </div>
