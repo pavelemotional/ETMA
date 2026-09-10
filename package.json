@@ -13,6 +13,8 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@firebase/storage": "^0.14.5",
     "@supabase/supabase-js": "^2.98.0",
+    "@tanstack/react-query": "^5.102.8",
+    "browser-image-compression": "^2.0.2",
     "canvas-confetti": "^1.9.3",
     "date-fns": "^2.30.0",
     "firebase": "^12.19.0",

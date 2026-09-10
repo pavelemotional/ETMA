@@ -1,10 +1,8 @@
 import { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ensureAdminExists } from './initAdmin';
-import { seedWines } from './seedWines';
-import { seedKitchen } from './seedKitchen';
-import { seedBar } from './seedBar';
 import Navbar from './components/Navbar';
 import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
@@ -14,6 +12,15 @@ import StatsPage from './pages/StatsPage';
 import AdminContentPage from './pages/AdminContentPage';
 import AdminStatsPage from './pages/AdminStatsPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 минут
+      retry: 2,
+    },
+  },
+});
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { user, loading } = useAuth();
@@ -51,17 +58,16 @@ function AppRoutes() {
 function App() {
   useEffect(() => {
     ensureAdminExists();
-    seedWines();
-    seedKitchen();
-    seedBar();
   }, []);
 
   return (
-    <HashRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </HashRouter>
+    <QueryClientProvider client={queryClient}>
+      <HashRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </HashRouter>
+    </QueryClientProvider>
   );
 }
 

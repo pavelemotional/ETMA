@@ -1,67 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, query, where, getDocs, doc, setDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { Card, Category, Tag, EntityType, ENTITY_LABELS, ENTITY_ICONS, FieldDefinition, StudyProgress } from '../types';
+import { EntityType, ENTITY_LABELS, ENTITY_ICONS, StudyProgress } from '../types';
+import { useCards, useCategories, useTags, useFieldDefinitions, useStudyProgress } from '../hooks/useFirestore';
+import { ErrorDisplay, LoadingDisplay, EmptyState } from '../components/UI';
 
 const CardsPage: React.FC = () => {
   const { entityType } = useParams<{ entityType: EntityType }>();
   const { user } = useAuth();
 
-  const [cards, setCards] = useState<Card[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [fields, setFields] = useState<FieldDefinition[]>([]);
-  const [progress, setProgress] = useState<Record<string, StudyProgress>>({});
+  const { data: cards = [], isLoading: cardsLoading, error: cardsError, refetch: refetchCards } = useCards(entityType);
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories(entityType);
+  const { data: tags = [], isLoading: tagsLoading } = useTags(entityType);
+  const { data: fields = [], isLoading: fieldsLoading } = useFieldDefinitions(entityType);
+  const { data: progress = {}, refetch: refetchProgress } = useStudyProgress(user?.id || '', entityType);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (entityType) loadData();
-  }, [entityType]);
-
-  const loadData = async () => {
-    if (!entityType) return;
-    setLoading(true);
-    try {
-      const catQ = query(collection(db, 'categories'), where('entityType', '==', entityType));
-      const catSnap = await getDocs(catQ);
-      const cats = catSnap.docs.map(d => ({ id: d.id, ...d.data() } as Category));
-      setCategories(cats);
-
-      const tagQ = query(collection(db, 'tags'), where('entityType', '==', entityType));
-      const tagSnap = await getDocs(tagQ);
-      const tgs = tagSnap.docs.map(d => ({ id: d.id, ...d.data() } as Tag));
-      setTags(tgs);
-
-      const fieldQ = query(collection(db, 'fieldDefinitions'), where('entityType', '==', entityType));
-      const fieldSnap = await getDocs(fieldQ);
-      const flds = fieldSnap.docs.map(d => ({ id: d.id, ...d.data() } as FieldDefinition)).sort((a, b) => a.order - b.order);
-      setFields(flds);
-
-      const cardQ = query(collection(db, 'cards'), where('entityType', '==', entityType));
-      const cardSnap = await getDocs(cardQ);
-      const crds = cardSnap.docs.map(d => ({ id: d.id, ...d.data() } as Card));
-      setCards(crds);
-
-      if (user) {
-        const progQ = query(collection(db, 'progress'), where('userId', '==', user.id), where('entityType', '==', entityType));
-        const progSnap = await getDocs(progQ);
-        const prog: Record<string, StudyProgress> = {};
-        progSnap.docs.forEach(d => {
-          prog[d.id] = { id: d.id, ...d.data() } as StudyProgress;
-        });
-        setProgress(prog);
-      }
-    } catch (error) {
-      console.error('Load error:', error);
-    }
-    setLoading(false);
-  };
+  const loading = cardsLoading || categoriesLoading || tagsLoading || fieldsLoading;
+  const error = cardsError;
 
   const filteredCards = cards.filter(card => {
     if (selectedCategory !== 'all' && card.categoryId !== selectedCategory) return false;
@@ -76,37 +38,35 @@ const CardsPage: React.FC = () => {
     const progId = `${user.id}_${currentCard.id}`;
     const existing = progress[progId];
     
-    if (existing) {
-      const updateData: any = {
-        timesShown: increment(1),
-        lastShown: Date.now(),
-      };
-      if (correct) updateData.timesCorrect = increment(1);
-      if (correct && existing.timesCorrect + 1 >= 3) updateData.isLearned = true;
-      await updateDoc(doc(db, 'progress', progId), updateData);
-      setProgress(prev => ({
-        ...prev,
-        [progId]: {
-          ...existing,
-          timesShown: existing.timesShown + 1,
-          timesCorrect: existing.timesCorrect + (correct ? 1 : 0),
+    try {
+      if (existing) {
+        const updateData: any = {
+          timesShown: increment(1),
           lastShown: Date.now(),
-          isLearned: existing.isLearned || (correct && existing.timesCorrect + 1 >= 3),
-        }
-      }));
-    } else {
-      const newProg: StudyProgress = {
-        id: progId,
-        userId: user.id,
-        cardId: currentCard.id,
-        entityType: entityType!,
-        timesShown: 1,
-        timesCorrect: correct ? 1 : 0,
-        lastShown: Date.now(),
-        isLearned: correct,
-      };
-      await setDoc(doc(db, 'progress', progId), newProg);
-      setProgress(prev => ({ ...prev, [progId]: newProg }));
+        };
+        if (correct) updateData.timesCorrect = increment(1);
+        if (correct && existing.timesCorrect + 1 >= 3) updateData.isLearned = true;
+        await updateDoc(doc(db, 'progress', progId), updateData);
+      } else {
+        const newProg: StudyProgress = {
+          id: progId,
+          userId: user.id,
+          cardId: currentCard.id,
+          entityType: entityType!,
+          timesShown: 1,
+          timesCorrect: correct ? 1 : 0,
+          lastShown: Date.now(),
+          isLearned: correct,
+        };
+        await setDoc(doc(db, 'progress', progId), newProg);
+      }
+      
+      // Обновляем кэш
+      await refetchProgress();
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      alert('Ошибка при сохранении прогресса');
+      return;
     }
     
     setIsFlipped(false);
@@ -139,9 +99,13 @@ const CardsPage: React.FC = () => {
   const getTagName = (id: string) => tags.find(t => t.id === id)?.name || '—';
 
   if (loading) {
+    return <LoadingDisplay message="Загрузка карточек..." />;
+  }
+
+  if (error) {
     return (
-      <div className="flex items-center justify-center p-20">
-        <div className="text-white text-xl animate-pulse">Загрузка...</div>
+      <div className="p-4 md:p-8">
+        <ErrorDisplay error={error} onRetry={() => refetchCards()} />
       </div>
     );
   }
@@ -222,10 +186,11 @@ const CardsPage: React.FC = () => {
 
         {/* Card Display */}
         {filteredCards.length === 0 ? (
-          <div className="text-center py-20 animate-fade-in">
-            <div className="text-6xl mb-4">📭</div>
-            <p className="text-gray-400 text-lg">Нет карточек для отображения</p>
-          </div>
+          <EmptyState 
+            icon="📭" 
+            title="Нет карточек для отображения"
+            description="Попробуйте изменить фильтры или добавьте карточки"
+          />
         ) : currentCard ? (
           <div className="flex flex-col items-center animate-fade-in">
             {/* Progress indicator */}

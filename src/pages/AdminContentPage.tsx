@@ -62,14 +62,25 @@ const AdminContentPage: React.FC = () => {
 
   // Card CRUD
   const saveCard = async (card: Partial<Card>) => {
-    if (editingCard) {
-      await updateDoc(doc(db, 'cards', editingCard.id), { ...card, updatedAt: Date.now() });
-    } else {
-      await addDoc(collection(db, 'cards'), { ...card, entityType: selectedEntity, createdAt: Date.now(), updatedAt: Date.now() });
+    try {
+      // Валидация
+      if (!card.categoryId) {
+        alert('Выберите категорию');
+        return;
+      }
+      
+      if (editingCard) {
+        await updateDoc(doc(db, 'cards', editingCard.id), { ...card, updatedAt: Date.now() });
+      } else {
+        await addDoc(collection(db, 'cards'), { ...card, entityType: selectedEntity, createdAt: Date.now(), updatedAt: Date.now() });
+      }
+      setShowCardModal(false);
+      setEditingCard(null);
+      loadData();
+    } catch (error) {
+      console.error('Error saving card:', error);
+      alert('Ошибка при сохранении карточки: ' + (error as Error).message);
     }
-    setShowCardModal(false);
-    setEditingCard(null);
-    loadData();
   };
 
   const deleteCard = async (id: string) => {
@@ -459,30 +470,19 @@ const CardModal: React.FC<{
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Проверка размера (макс 1MB для Firestore)
-    if (file.size > 1024 * 1024) {
-      alert('Размер изображения не должен превышать 1MB');
-      return;
-    }
-    
     setUploading(true);
     try {
-      // Конвертируем в base64
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        setImageUrl(base64);
-        setUploading(false);
-      };
-      reader.onerror = () => {
-        console.error('Error reading file');
-        alert('Ошибка при чтении файла');
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      // Сжимаем изображение и конвертируем в base64
+      const { compressAndConvertToBase64 } = await import('../utils/imageCompression');
+      const base64 = await compressAndConvertToBase64(file, {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 1024,
+      });
+      setImageUrl(base64);
     } catch (error) {
       console.error('Error uploading image:', error);
       alert('Ошибка при загрузке изображения: ' + (error as Error).message);
+    } finally {
       setUploading(false);
     }
   };
