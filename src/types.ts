@@ -26,6 +26,7 @@ export interface Card {
   categoryId: string;
   tags: string[];
   fields: Record<string, string>;
+  imageUrl?: string;
   createdAt: number;
   updatedAt: number;
 }

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebase';
 import { Card, Category, Tag, EntityType, ENTITY_LABELS, FieldDefinition } from '../types';
 
 type Tab = 'cards' | 'categories' | 'tags' | 'fields';
@@ -223,6 +224,18 @@ const AdminContentPage: React.FC = () => {
                         </span>
                         <button onClick={() => { setEditingCard(card); setShowCardModal(true); }} className="text-blue-400 hover:text-blue-300 text-sm">✏️</button>
                       </div>
+                      {card.imageUrl && (
+                        <img src={card.imageUrl} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />
+                      )}
+                      {card.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {card.tags.map(tagId => (
+                            <span key={tagId} className="px-2 py-0.5 bg-blue-600/30 text-blue-300 rounded text-xs">
+                              {tags.find(t => t.id === tagId)?.name || '—'}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <div className="mt-2 space-y-1">
                         {fields.map(field => (
                           card.fields[field.id] && (
@@ -390,6 +403,8 @@ const CardModal: React.FC<{
   const [categoryId, setCategoryId] = useState(card?.categoryId || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(card?.tags || []);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(card?.fields || {});
+  const [imageUrl, setImageUrl] = useState(card?.imageUrl || '');
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -397,6 +412,7 @@ const CardModal: React.FC<{
       categoryId,
       tags: selectedTags,
       fields: fieldValues,
+      imageUrl,
     });
   };
 
@@ -404,6 +420,27 @@ const CardModal: React.FC<{
     if (confirm('Удалить карточку?')) {
       onDelete?.();
     }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `cards/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setImageUrl(url);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Ошибка при загрузке изображения');
+    }
+    setUploading(false);
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl('');
   };
 
   return (
@@ -460,6 +497,38 @@ const CardModal: React.FC<{
                 />
               </div>
             ))}
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-400 mb-1 block">Изображение</label>
+            {imageUrl ? (
+              <div className="relative">
+                <img src={imageUrl} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  {uploading ? (
+                    <div className="text-gray-400">Загрузка...</div>
+                  ) : (
+                    <>
+                      <svg className="w-8 h-8 mb-2 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                      </svg>
+                      <p className="text-xs text-gray-400">Нажмите для загрузки изображения</p>
+                    </>
+                  )}
+                </div>
+                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
+              </label>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">

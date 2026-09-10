@@ -208,13 +208,13 @@ const CardsPage: React.FC = () => {
             </div>
 
             {/* Card Container */}
-            <div className="w-full max-w-2xl flex flex-col min-h-[600px]">
+            <div className="w-full max-w-2xl relative pb-32">
               {/* Card */}
               <div
                 onClick={() => setIsFlipped(!isFlipped)}
-                className="flex-1 cursor-pointer perspective-1000"
+                className="cursor-pointer perspective-1000"
               >
-                <div className={`grid h-full transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+                <div className={`grid transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                   {/* Front */}
                   <div className="col-start-1 row-start-1 backface-hidden glass rounded-3xl p-8 shadow-2xl">
                     <div className="flex justify-between items-start mb-6">
@@ -230,7 +230,13 @@ const CardsPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="flex flex-col items-center justify-center min-h-[300px] py-8">
+                    {currentCard.imageUrl && (
+                      <div className="mb-6">
+                        <img src={currentCard.imageUrl} alt="" className="w-full h-48 object-cover rounded-xl" />
+                      </div>
+                    )}
+
+                    <div className="flex flex-col items-center justify-center min-h-[200px] py-8">
                       {fields.slice(0, 1).map(field => {
                         const value = currentCard.fields[field.id];
                         if (!value) return null;
@@ -250,7 +256,12 @@ const CardsPage: React.FC = () => {
                   </div>
 
                   {/* Back */}
-                  <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 glass rounded-3xl p-8 shadow-2xl overflow-y-auto">
+                  <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 glass rounded-3xl p-8 shadow-2xl overflow-y-auto max-h-[500px]">
+                    {currentCard.imageUrl && (
+                      <div className="mb-6">
+                        <img src={currentCard.imageUrl} alt="" className="w-full h-48 object-cover rounded-xl" />
+                      </div>
+                    )}
                     <h3 className="text-xl font-bold text-white mb-6 text-center">Полная информация</h3>
                     <div className="space-y-4">
                       {fields.map(field => {
@@ -271,8 +282,9 @@ const CardsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Study mode controls - Fixed position */}
-              <div className="mt-6 min-h-[60px] flex items-center justify-center">
+              {/* Buttons - Fixed at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-4">
+                {/* Study mode controls */}
                 {isFlipped && (
                   <div className="flex gap-4 animate-fade-in">
                     <button
@@ -289,10 +301,8 @@ const CardsPage: React.FC = () => {
                     </button>
                   </div>
                 )}
-              </div>
 
-              {/* Navigation - Fixed position */}
-              <div className="mt-4 min-h-[48px] flex items-center justify-center">
+                {/* Navigation */}
                 <div className="flex gap-4">
                   <button
                     onClick={() => { setCurrentIndex(prev => Math.max(0, prev - 1)); setIsFlipped(false); }}
