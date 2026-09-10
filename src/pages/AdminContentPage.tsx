@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { Card, Category, Tag, EntityType, ENTITY_LABELS, FieldDefinition } from '../types';
 
 type Tab = 'cards' | 'categories' | 'tags' | 'fields';
 
 const AdminContentPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('cards');
   const [selectedEntity, setSelectedEntity] = useState<EntityType>('wine');
   const [cards, setCards] = useState<Card[]>([]);
@@ -68,14 +69,22 @@ const AdminContentPage: React.FC = () => {
   };
 
   const deleteCard = async (id: string) => {
+    console.log('🗑️ Starting delete for card ID:', id);
     try {
-      console.log('Deleting card:', id);
-      await deleteDoc(doc(db, 'cards', id));
-      console.log('Card deleted successfully');
+      const cardRef = doc(db, 'cards', id);
+      console.log('📄 Card reference created:', cardRef.path);
+      
+      await deleteDoc(cardRef);
+      console.log('✅ Card deleted from Firestore successfully');
+      
       await loadData();
+      console.log('🔄 Data reloaded after deletion');
+      
+      alert('✅ Карточка успешно удалена');
     } catch (error) {
-      console.error('Error deleting card:', error);
-      alert('Ошибка при удалении карточки: ' + (error as Error).message);
+      console.error('❌ Error deleting card:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      alert('❌ Ошибка при удалении карточки: ' + errorMessage);
     }
   };
 
@@ -340,13 +349,13 @@ const AdminContentPage: React.FC = () => {
           tags={tags}
           fields={fields}
           onSave={saveCard}
-          onDelete={() => {
-            if (editingCard) {
-              deleteCard(editingCard.id);
-              setShowCardModal(false);
-              setEditingCard(null);
-            }
-          }}
+          onDelete={editingCard ? async () => {
+            console.log('🎯 onDelete called for card:', editingCard.id);
+            await deleteCard(editingCard.id);
+            console.log('🚪 Closing modal after deletion');
+            setShowCardModal(false);
+            setEditingCard(null);
+          } : undefined}
           onClose={() => { setShowCardModal(false); setEditingCard(null); }}
         />
       )}
@@ -414,10 +423,21 @@ const CardModal: React.FC<{
   };
 
   const handleDelete = () => {
-    if (window.confirm('Вы уверены, что хотите удалить эту карточку? Это действие нельзя отменить.')) {
+    console.log('🗑️ Delete button clicked');
+    console.log('📋 Card data:', card);
+    console.log('🔗 onDelete function exists:', !!onDelete);
+    
+    if (window.confirm('Вы уверены, что хотите удалить эту карточку?\n\nЭто действие нельзя отменить.')) {
+      console.log('✅ User confirmed deletion');
       if (onDelete) {
+        console.log('🚀 Calling onDelete function');
         onDelete();
+      } else {
+        console.error('❌ onDelete function is not defined!');
+        alert('Ошибка: функция удаления не настроена');
       }
+    } else {
+      console.log('❌ User cancelled deletion');
     }
   };
 
@@ -425,17 +445,32 @@ const CardModal: React.FC<{
     const file = e.target.files?.[0];
     if (!file) return;
     
+    // Проверка размера (макс 1MB для Firestore)
+    if (file.size > 1024 * 1024) {
+      alert('Размер изображения не должен превышать 1MB');
+      return;
+    }
+    
     setUploading(true);
     try {
-      const storageRef = ref(storage, `cards/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      setImageUrl(url);
+      // Конвертируем в base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setImageUrl(base64);
+        setUploading(false);
+      };
+      reader.onerror = () => {
+        console.error('Error reading file');
+        alert('Ошибка при чтении файла');
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Ошибка при загрузке изображения');
+      alert('Ошибка при загрузке изображения: ' + (error as Error).message);
+      setUploading(false);
     }
-    setUploading(false);
   };
 
   const handleRemoveImage = () => {
