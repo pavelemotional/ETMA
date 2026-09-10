@@ -155,69 +155,68 @@ const CardsPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-white">{ENTITY_LABELS[entityType!]}</h1>
         </div>
 
-        {/* Filters */}
-        <div className="glass rounded-2xl p-4 mb-6 animate-fade-in">
-          <div className="space-y-3">
-            {/* Categories as chips */}
-            <div>
-              <label className="text-xs text-gray-400 mb-2 block">Категории</label>
-              <div className="flex flex-wrap gap-2">
+        {/* Filters - Compact */}
+        <div className="glass rounded-xl px-3 py-2 mb-4 animate-fade-in">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Categories */}
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => { setSelectedCategory('all'); setCurrentIndex(0); setIsFlipped(false); }}
+                className={`px-2.5 py-1 rounded-full text-xs transition ${
+                  selectedCategory === 'all'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Все
+              </button>
+              {categories.map(cat => (
                 <button
-                  onClick={() => { setSelectedCategory('all'); setCurrentIndex(0); setIsFlipped(false); }}
-                  className={`px-4 py-2 rounded-full text-sm transition hover-lift ${
-                    selectedCategory === 'all'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                  key={cat.id}
+                  onClick={() => { setSelectedCategory(cat.id); setCurrentIndex(0); setIsFlipped(false); }}
+                  className={`px-2.5 py-1 rounded-full text-xs transition ${
+                    selectedCategory === cat.id
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700'
                   }`}
                 >
-                  Все
+                  {cat.name}
                 </button>
-                {categories.map(cat => (
+              ))}
+            </div>
+            
+            {/* Separator */}
+            {tags.length > 0 && <div className="w-px h-4 bg-gray-700" />}
+            
+            {/* Tags */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {tags.map(tag => (
                   <button
-                    key={cat.id}
-                    onClick={() => { setSelectedCategory(cat.id); setCurrentIndex(0); setIsFlipped(false); }}
-                    className={`px-4 py-2 rounded-full text-sm transition hover-lift ${
-                      selectedCategory === cat.id
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                    key={tag.id}
+                    onClick={() => {
+                      setSelectedTags(prev => 
+                        prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id]
+                      );
+                      setCurrentIndex(0);
+                      setIsFlipped(false);
+                    }}
+                    className={`px-2 py-0.5 rounded-full text-xs transition ${
+                      selectedTags.includes(tag.id)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700'
                     }`}
                   >
-                    {cat.name}
+                    {tag.name}
                   </button>
                 ))}
               </div>
-            </div>
-            
-            {/* Tags as chips */}
-            {tags.length > 0 && (
-              <div>
-                <label className="text-xs text-gray-400 mb-2 block">Теги</label>
-                <div className="flex flex-wrap gap-2">
-                  {tags.map(tag => (
-                    <button
-                      key={tag.id}
-                      onClick={() => {
-                        setSelectedTags(prev => 
-                          prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id]
-                        );
-                        setCurrentIndex(0);
-                        setIsFlipped(false);
-                      }}
-                      className={`px-3 py-1.5 rounded-full text-xs transition hover-lift ${
-                        selectedTags.includes(tag.id)
-                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg'
-                          : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
-                      }`}
-                    >
-                      {tag.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
             )}
-          </div>
-          <div className="mt-3 text-sm text-gray-400">
-            Найдено карточек: <span className="text-white font-semibold">{filteredCards.length}</span>
+            
+            {/* Counter */}
+            <div className="ml-auto text-xs text-gray-500">
+              {filteredCards.length} шт.
+            </div>
           </div>
         </div>
 

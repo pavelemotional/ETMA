@@ -414,8 +414,10 @@ const CardModal: React.FC<{
   };
 
   const handleDelete = () => {
-    if (confirm('Удалить карточку?')) {
-      onDelete?.();
+    if (window.confirm('Вы уверены, что хотите удалить эту карточку? Это действие нельзя отменить.')) {
+      if (onDelete) {
+        onDelete();
+      }
     }
   };
 
