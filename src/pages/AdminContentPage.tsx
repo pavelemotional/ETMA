@@ -71,9 +71,14 @@ const AdminContentPage: React.FC = () => {
   };
 
   const deleteCard = async (id: string) => {
-    if (confirm('Удалить карточку?')) {
+    try {
+      console.log('Deleting card:', id);
       await deleteDoc(doc(db, 'cards', id));
-      loadData();
+      console.log('Card deleted successfully');
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      alert('Ошибка при удалении карточки: ' + (error as Error).message);
     }
   };
 
@@ -90,9 +95,14 @@ const AdminContentPage: React.FC = () => {
   };
 
   const deleteCategory = async (id: string) => {
-    if (confirm('Удалить категорию?')) {
+    try {
+      console.log('Deleting category:', id);
       await deleteDoc(doc(db, 'categories', id));
-      loadData();
+      console.log('Category deleted successfully');
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      alert('Ошибка при удалении категории: ' + (error as Error).message);
     }
   };
 
@@ -109,9 +119,14 @@ const AdminContentPage: React.FC = () => {
   };
 
   const deleteTag = async (id: string) => {
-    if (confirm('Удалить тег?')) {
+    try {
+      console.log('Deleting tag:', id);
       await deleteDoc(doc(db, 'tags', id));
-      loadData();
+      console.log('Tag deleted successfully');
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting tag:', error);
+      alert('Ошибка при удалении тега: ' + (error as Error).message);
     }
   };
 
@@ -128,9 +143,14 @@ const AdminContentPage: React.FC = () => {
   };
 
   const deleteField = async (id: string) => {
-    if (confirm('Удалить поле?')) {
+    try {
+      console.log('Deleting field:', id);
       await deleteDoc(doc(db, 'fieldDefinitions', id));
-      loadData();
+      console.log('Field deleted successfully');
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting field:', error);
+      alert('Ошибка при удалении поля: ' + (error as Error).message);
     }
   };
 
@@ -231,10 +251,7 @@ const AdminContentPage: React.FC = () => {
                         <span className="px-2 py-1 bg-purple-600/30 text-purple-300 rounded text-xs">
                           {categories.find(c => c.id === card.categoryId)?.name || '—'}
                         </span>
-                        <div className="flex gap-1">
-                          <button onClick={() => { setEditingCard(card); setShowCardModal(true); }} className="text-blue-400 hover:text-blue-300 text-sm">✏️</button>
-                          <button onClick={() => deleteCard(card.id)} className="text-red-400 hover:text-red-300 text-sm">🗑️</button>
-                        </div>
+                        <button onClick={() => { setEditingCard(card); setShowCardModal(true); }} className="text-blue-400 hover:text-blue-300 text-sm">✏️</button>
                       </div>
                       <div className="mt-2 space-y-1">
                         {fields.map(field => (
@@ -343,6 +360,13 @@ const AdminContentPage: React.FC = () => {
           tags={tags}
           fields={fields}
           onSave={saveCard}
+          onDelete={() => {
+            if (editingCard) {
+              deleteCard(editingCard.id);
+              setShowCardModal(false);
+              setEditingCard(null);
+            }
+          }}
           onClose={() => { setShowCardModal(false); setEditingCard(null); }}
         />
       )}
@@ -390,8 +414,9 @@ const CardModal: React.FC<{
   tags: Tag[];
   fields: FieldDefinition[];
   onSave: (card: Partial<Card>) => void;
+  onDelete?: () => void;
   onClose: () => void;
-}> = ({ card, categories, tags, fields, onSave, onClose }) => {
+}> = ({ card, categories, tags, fields, onSave, onDelete, onClose }) => {
   const [categoryId, setCategoryId] = useState(card?.categoryId || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(card?.tags || []);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(card?.fields || {});
@@ -403,6 +428,12 @@ const CardModal: React.FC<{
       tags: selectedTags,
       fields: fieldValues,
     });
+  };
+
+  const handleDelete = () => {
+    if (confirm('Удалить карточку?')) {
+      onDelete?.();
+    }
   };
 
   return (
@@ -468,6 +499,11 @@ const CardModal: React.FC<{
             <button type="button" onClick={onClose} className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition">
               Отмена
             </button>
+            {card && onDelete && (
+              <button type="button" onClick={handleDelete} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
+                🗑️ Удалить
+              </button>
+            )}
           </div>
         </form>
       </div>
