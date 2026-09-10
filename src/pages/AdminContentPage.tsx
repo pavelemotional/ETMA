@@ -499,13 +499,23 @@ const CardModal: React.FC<{
             <button type="button" onClick={onClose} className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition">
               Отмена
             </button>
-            {card && onDelete && (
-              <button type="button" onClick={handleDelete} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
-                🗑️ Удалить
-              </button>
-            )}
           </div>
         </form>
+        {card && onDelete && (
+          <div className="pt-3 border-t border-gray-700 mt-3">
+            <button 
+              type="button" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleDelete();
+              }}
+              className="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
+            >
+              🗑️ Удалить карточку
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
