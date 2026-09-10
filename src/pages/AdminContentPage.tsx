@@ -69,10 +69,27 @@ const AdminContentPage: React.FC = () => {
         return;
       }
       
+      // Убеждаемся, что imageUrl всегда передается (даже если пустая строка)
+      const cardData = {
+        ...card,
+        imageUrl: card.imageUrl || '',
+      };
+      
+      console.log('Saving card with imageUrl:', {
+        hasImageUrl: !!cardData.imageUrl,
+        imageUrlLength: cardData.imageUrl?.length || 0,
+        imageUrlPreview: cardData.imageUrl ? `${cardData.imageUrl.substring(0, 50)}...` : 'undefined'
+      });
+      
       if (editingCard) {
-        await updateDoc(doc(db, 'cards', editingCard.id), { ...card, updatedAt: Date.now() });
+        await updateDoc(doc(db, 'cards', editingCard.id), { ...cardData, updatedAt: Date.now() });
       } else {
-        await addDoc(collection(db, 'cards'), { ...card, entityType: selectedEntity, createdAt: Date.now(), updatedAt: Date.now() });
+        await addDoc(collection(db, 'cards'), { 
+          ...cardData, 
+          entityType: selectedEntity, 
+          createdAt: Date.now(), 
+          updatedAt: Date.now() 
+        });
       }
       setShowCardModal(false);
       setEditingCard(null);

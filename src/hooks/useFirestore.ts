@@ -21,7 +21,16 @@ export const useCards = (entityType?: EntityType) => {
         ? query(collection(db, 'cards'), where('entityType', '==', entityType))
         : collection(db, 'cards');
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Card));
+      const cards = snapshot.docs.map(d => {
+        const data = d.data();
+        console.log(`Card ${d.id} from Firestore:`, {
+          hasImageUrl: !!data.imageUrl,
+          imageUrlLength: data.imageUrl?.length || 0,
+          imageUrlPreview: data.imageUrl ? `${data.imageUrl.substring(0, 50)}...` : 'undefined'
+        });
+        return { id: d.id, ...data } as Card;
+      });
+      return cards;
     },
   });
 };

@@ -33,6 +33,16 @@ const CardsPage: React.FC = () => {
 
   const currentCard = filteredCards[currentIndex];
 
+  // Отладка: логируем текущую карточку
+  if (currentCard) {
+    console.log('Current card:', {
+      id: currentCard.id,
+      imageUrl: currentCard.imageUrl ? `${currentCard.imageUrl.substring(0, 50)}...` : 'undefined',
+      hasImageUrl: !!currentCard.imageUrl,
+      imageUrlLength: currentCard.imageUrl?.length || 0
+    });
+  }
+
   const markStudied = async (correct: boolean) => {
     if (!currentCard || !user) return;
     const progId = `${user.id}_${currentCard.id}`;
