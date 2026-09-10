@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ensureAdminExists } from './initAdmin';
 import { seedWines } from './seedWines';
 import { seedKitchen } from './seedKitchen';
+import { seedBar } from './seedBar';
 import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
 import CardsPage from './pages/CardsPage';
@@ -44,6 +45,7 @@ function App() {
     ensureAdminExists();
     seedWines();
     seedKitchen();
+    seedBar();
   }, []);
 
   return (
