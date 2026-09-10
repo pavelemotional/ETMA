@@ -234,16 +234,16 @@ const CardsPage: React.FC = () => {
             {/* Card */}
             <div
               onClick={() => setIsFlipped(!isFlipped)}
-              className="w-full max-w-2xl min-h-[400px] cursor-pointer perspective-1000"
+              className="w-full max-w-2xl cursor-pointer perspective-1000"
             >
-              <div className={`relative w-full min-h-[400px] transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+              <div className={`grid transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                 {/* Front */}
-                <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 p-8 shadow-2xl">
+                <div className="col-start-1 row-start-1 backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 p-8 shadow-2xl">
                   <div className="flex justify-between items-start mb-6">
                     <span className="px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-sm">
                       {getCategoryName(currentCard.categoryId)}
                     </span>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap justify-end">
                       {currentCard.tags.map(tagId => (
                         <span key={tagId} className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs">
                           {getTagName(tagId)}
@@ -252,7 +252,7 @@ const CardsPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center h-[280px]">
+                  <div className="flex flex-col items-center justify-center min-h-[300px] py-8">
                     {fields.slice(0, 1).map(field => {
                       const value = currentCard.fields[field.id];
                       if (!value) return null;
@@ -266,13 +266,13 @@ const CardsPage: React.FC = () => {
                     })}
                   </div>
 
-                  <div className="absolute bottom-4 left-0 right-0 text-center text-gray-500 text-sm">
+                  <div className="text-center text-gray-500 text-sm mt-4">
                     {isFlipped ? '' : 'Нажмите, чтобы перевернуть'}
                   </div>
                 </div>
 
                 {/* Back */}
-                <div className="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 p-8 shadow-2xl">
+                <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 p-8 shadow-2xl">
                   <h3 className="text-xl font-bold text-white mb-6 text-center">Полная информация</h3>
                   <div className="space-y-4">
                     {fields.map(field => {
@@ -281,10 +281,13 @@ const CardsPage: React.FC = () => {
                       return (
                         <div key={field.id} className="border-b border-gray-700 pb-3">
                           <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">{field.name}</div>
-                          <div className="text-white">{value}</div>
+                          <div className="text-white leading-relaxed">{value}</div>
                         </div>
                       );
                     })}
+                  </div>
+                  <div className="text-center text-gray-500 text-sm mt-6">
+                    {isFlipped ? 'Нажмите, чтобы перевернуть обратно' : ''}
                   </div>
                 </div>
               </div>
