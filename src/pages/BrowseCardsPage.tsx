@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Card, Category, Tag, EntityType, ENTITY_LABELS, ENTITY_ICONS, FieldDefinition, StudyProgress } from '../types';
 
 const BrowseCardsPage: React.FC = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   
   const [cards, setCards] = useState<Card[]>([]);
@@ -14,6 +12,7 @@ const BrowseCardsPage: React.FC = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [fields, setFields] = useState<Record<string, FieldDefinition[]>>({});
   const [progress, setProgress] = useState<Record<string, StudyProgress>>({});
+  const [selectedEntity, setSelectedEntity] = useState<EntityType | 'all'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
@@ -71,10 +70,19 @@ const BrowseCardsPage: React.FC = () => {
   };
 
   const filteredCards = cards.filter(card => {
+    if (selectedEntity !== 'all' && card.entityType !== selectedEntity) return false;
     if (selectedCategory !== 'all' && card.categoryId !== selectedCategory) return false;
     if (selectedTags.length > 0 && !selectedTags.some(t => card.tags.includes(t))) return false;
     return true;
   });
+
+  const filteredCategories = categories.filter(cat => 
+    selectedEntity === 'all' || cat.entityType === selectedEntity
+  );
+
+  const filteredTags = tags.filter(tag => 
+    selectedEntity === 'all' || tag.entityType === selectedEntity
+  );
 
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || '—';
   const getTagName = (id: string) => tags.find(t => t.id === id)?.name || '—';
@@ -95,24 +103,53 @@ const BrowseCardsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+      <div className="flex items-center justify-center p-20">
         <div className="text-white text-xl animate-pulse">Загрузка...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6 animate-fade-in">
-          <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl hover-lift">←</button>
+        <div className="mb-6 animate-fade-in">
           <h1 className="text-2xl font-bold text-white">📚 Все карточки</h1>
         </div>
 
         {/* Filters */}
         <div className="glass rounded-2xl p-4 mb-6 animate-fade-in">
-          <div className="space-y-3">
+          <div className="space-y-4">
+            {/* Entity Switcher */}
+            <div>
+              <label className="text-xs text-gray-400 mb-2 block">Раздел</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => { setSelectedEntity('all'); setSelectedCategory('all'); setSelectedTags([]); }}
+                  className={`px-4 py-2 rounded-full text-sm transition hover-lift ${
+                    selectedEntity === 'all'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  🌟 Все
+                </button>
+                {(['wine', 'kitchen', 'bar'] as EntityType[]).map(entity => (
+                  <button
+                    key={entity}
+                    onClick={() => { setSelectedEntity(entity); setSelectedCategory('all'); setSelectedTags([]); }}
+                    className={`px-4 py-2 rounded-full text-sm transition hover-lift ${
+                      selectedEntity === entity
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    {ENTITY_ICONS[entity]} {ENTITY_LABELS[entity]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Categories */}
             <div>
               <label className="text-xs text-gray-400 mb-2 block">Категории</label>
@@ -121,19 +158,19 @@ const BrowseCardsPage: React.FC = () => {
                   onClick={() => setSelectedCategory('all')}
                   className={`px-4 py-2 rounded-full text-sm transition hover-lift ${
                     selectedCategory === 'all'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
                       : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   Все
                 </button>
-                {categories.map(cat => (
+                {filteredCategories.map(cat => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
                     className={`px-4 py-2 rounded-full text-sm transition hover-lift ${
                       selectedCategory === cat.id
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
                         : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
                     }`}
                   >
@@ -144,11 +181,11 @@ const BrowseCardsPage: React.FC = () => {
             </div>
             
             {/* Tags */}
-            {tags.length > 0 && (
+            {filteredTags.length > 0 && (
               <div>
                 <label className="text-xs text-gray-400 mb-2 block">Теги</label>
                 <div className="flex flex-wrap gap-2">
-                  {tags.map(tag => (
+                  {filteredTags.map(tag => (
                     <button
                       key={tag.id}
                       onClick={() => {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
@@ -8,7 +7,6 @@ import { Card, Category, Tag, EntityType, ENTITY_LABELS, FieldDefinition } from 
 type Tab = 'cards' | 'categories' | 'tags' | 'fields';
 
 const AdminContentPage: React.FC = () => {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('cards');
   const [selectedEntity, setSelectedEntity] = useState<EntityType>('wine');
   const [cards, setCards] = useState<Card[]>([]);
@@ -161,11 +159,10 @@ const AdminContentPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl">←</button>
+        <div className="mb-6">
           <h1 className="text-2xl font-bold text-white">✏️ Управление контентом</h1>
         </div>
 

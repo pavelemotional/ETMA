@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,7 +7,6 @@ import { Card, Category, Tag, EntityType, ENTITY_LABELS, ENTITY_ICONS, FieldDefi
 
 const CardsPage: React.FC = () => {
   const { entityType } = useParams<{ entityType: EntityType }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [cards, setCards] = useState<Card[]>([]);
@@ -141,18 +140,17 @@ const CardsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="flex items-center justify-center p-20">
         <div className="text-white text-xl animate-pulse">Загрузка...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6 animate-fade-in">
-          <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl hover-lift">←</button>
           <span className="text-3xl">{ENTITY_ICONS[entityType!]}</span>
           <h1 className="text-2xl font-bold text-white">{ENTITY_LABELS[entityType!]}</h1>
         </div>

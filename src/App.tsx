@@ -5,6 +5,7 @@ import { ensureAdminExists } from './initAdmin';
 import { seedWines } from './seedWines';
 import { seedKitchen } from './seedKitchen';
 import { seedBar } from './seedBar';
+import Navbar from './components/Navbar';
 import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
 import CardsPage from './pages/CardsPage';
@@ -19,7 +20,12 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">Загрузка...</div>;
   if (!user) return <Navigate to="/login" />;
   if (adminOnly && !user.isAdmin) return <Navigate to="/" />;
-  return <>{children}</>;
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <Navbar />
+      {children}
+    </div>
+  );
 }
 
 function AppRoutes() {

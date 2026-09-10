@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { StudyProgress, Card, Category, EntityType, ENTITY_LABELS, ENTITY_ICONS } from '../types';
 
 const StatsPage: React.FC = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [progress, setProgress] = useState<StudyProgress[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
@@ -64,18 +62,17 @@ const StatsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="flex items-center justify-center p-20">
         <div className="text-white text-xl animate-pulse">Загрузка...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8 animate-fade-in">
-          <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition text-2xl hover-lift">←</button>
+        <div className="mb-8 animate-fade-in">
           <h1 className="text-2xl font-bold text-white">📊 Моя статистика</h1>
         </div>
 
