@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Card, Category, Tag, EntityType, ENTITY_LABELS, FieldDefinition } from '../types';
+import ImageCropper from '../components/ImageCropper';
 
 type Tab = 'cards' | 'categories' | 'tags' | 'fields';
 
@@ -472,6 +473,7 @@ const CardModal: React.FC<{
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(card?.fields || {});
   const [imageUrl, setImageUrl] = useState(card?.imageUrl || '');
   const [uploading, setUploading] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -483,25 +485,40 @@ const CardModal: React.FC<{
     });
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
+    // Создаем URL для предпросмотра и открытия модалки обрезки
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
     setUploading(true);
+    setCropImageSrc(null);
+    
     try {
-      // Сжимаем изображение и конвертируем в base64
+      // Сжимаем обрезанное изображение и конвертируем в base64
       const { compressAndConvertToBase64 } = await import('../utils/imageCompression');
-      const base64 = await compressAndConvertToBase64(file, {
+      const base64 = await compressAndConvertToBase64(croppedFile, {
         maxSizeMB: 0.5,
         maxWidthOrHeight: 1024,
       });
       setImageUrl(base64);
     } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Ошибка при загрузке изображения: ' + (error as Error).message);
+      console.error('Error processing image:', error);
+      alert('Ошибка при обработке изображения: ' + (error as Error).message);
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCropCancel = () => {
+    setCropImageSrc(null);
   };
 
   const handleRemoveImage = () => {
@@ -606,6 +623,15 @@ const CardModal: React.FC<{
           </div>
         </form>
       </div>
+
+      {/* Image Cropper Modal */}
+      {cropImageSrc && (
+        <ImageCropper
+          imageSrc={cropImageSrc}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
+      )}
     </div>
   );
 };
