@@ -35,21 +35,21 @@ const CardsPage: React.FC = () => {
 
   // Отладка: логируем текущую карточку и теги
   if (currentCard) {
-    console.log('Current card:', {
-      id: currentCard.id,
-      imageUrl: currentCard.imageUrl ? `${currentCard.imageUrl.substring(0, 50)}...` : 'undefined',
-      hasImageUrl: !!currentCard.imageUrl,
-      imageUrlLength: currentCard.imageUrl?.length || 0,
-      tags: currentCard.tags,
-      tagsCount: currentCard.tags?.length || 0
-    });
+    console.log('=== Current Card Debug ===');
+    console.log('Card ID:', currentCard.id);
+    console.log('Card tags:', currentCard.tags);
+    console.log('Card tags count:', currentCard.tags?.length || 0);
+    console.log('Available tags:', tags);
+    console.log('Available tags count:', tags.length);
+    
+    // Проверяем каждый тег карточки
+    if (currentCard.tags && currentCard.tags.length > 0) {
+      currentCard.tags.forEach(tagId => {
+        const tag = tags.find(t => t.id === tagId);
+        console.log(`Tag ID "${tagId}":`, tag ? `Found - ${tag.name}` : 'NOT FOUND');
+      });
+    }
   }
-
-  // Отладка: логируем загруженные теги
-  console.log('Loaded tags:', {
-    count: tags.length,
-    tags: tags.map(t => ({ id: t.id, name: t.name, entityType: t.entityType }))
-  });
 
   const markStudied = async (correct: boolean) => {
     if (!currentCard || !user) return;
@@ -114,7 +114,14 @@ const CardsPage: React.FC = () => {
   };
 
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || '—';
-  const getTagName = (id: string) => tags.find(t => t.id === id)?.name || '—';
+  const getTagName = (id: string) => {
+    const tag = tags.find(t => t.id === id);
+    if (!tag) {
+      console.warn(`Tag with ID "${id}" not found in tags array`);
+      return '—';
+    }
+    return tag.name;
+  };
 
   if (loading) {
     return <LoadingDisplay message="Загрузка карточек..." />;
@@ -243,7 +250,7 @@ const CardsPage: React.FC = () => {
                         {currentCard.tags && currentCard.tags.length > 0 ? (
                           currentCard.tags.map(tagId => {
                             const tagName = getTagName(tagId);
-                            console.log(`Rendering tag ${tagId}: ${tagName}`);
+                            console.log(`🏷️ Rendering tag:`, { tagId, tagName, found: tagName !== '—' });
                             return (
                               <span key={tagId} className="px-2 py-1 bg-gray-800/50 text-gray-300 rounded text-xs">
                                 {tagName}
@@ -251,7 +258,7 @@ const CardsPage: React.FC = () => {
                             );
                           })
                         ) : (
-                          <span className="text-xs text-gray-500">Нет тегов</span>
+                          <span className="text-xs text-gray-500 italic">Нет тегов</span>
                         )}
                       </div>
                     </div>
