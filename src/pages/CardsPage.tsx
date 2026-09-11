@@ -33,14 +33,22 @@ const CardsPage: React.FC = () => {
 
   const currentCard = filteredCards[currentIndex];
 
-  // Отладка: логируем текущую карточку
+  // Отладка: логируем текущую карточку и теги
   if (currentCard) {
-    console.log('Current card:', {
-      id: currentCard.id,
-      imageUrl: currentCard.imageUrl ? `${currentCard.imageUrl.substring(0, 50)}...` : 'undefined',
-      hasImageUrl: !!currentCard.imageUrl,
-      imageUrlLength: currentCard.imageUrl?.length || 0
-    });
+    console.log('=== Current Card Debug ===');
+    console.log('Card ID:', currentCard.id);
+    console.log('Card tags:', currentCard.tags);
+    console.log('Card tags count:', currentCard.tags?.length || 0);
+    console.log('Available tags:', tags);
+    console.log('Available tags count:', tags.length);
+    
+    // Проверяем каждый тег карточки
+    if (currentCard.tags && currentCard.tags.length > 0) {
+      currentCard.tags.forEach(tagId => {
+        const tag = tags.find(t => t.id === tagId);
+        console.log(`Tag ID "${tagId}":`, tag ? `Found - ${tag.name}` : 'NOT FOUND');
+      });
+    }
   }
 
   const markStudied = async (correct: boolean) => {
@@ -106,7 +114,14 @@ const CardsPage: React.FC = () => {
   };
 
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || '—';
-  const getTagName = (id: string) => tags.find(t => t.id === id)?.name || '—';
+  const getTagName = (id: string) => {
+    const tag = tags.find(t => t.id === id);
+    if (!tag) {
+      console.warn(`Tag with ID "${id}" not found in tags array`);
+      return '—';
+    }
+    return tag.name;
+  };
 
   if (loading) {
     return <LoadingDisplay message="Загрузка карточек..." />;
@@ -227,17 +242,26 @@ const CardsPage: React.FC = () => {
                 <div className={`grid transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                   {/* Front */}
                   <div className="col-start-1 row-start-1 backface-hidden glass rounded-3xl p-8 shadow-2xl">
-                    <div className="flex justify-between items-start mb-6">
-                      <span className="px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-sm">
-                        {getCategoryName(currentCard.categoryId)}
-                      </span>
-                      <div className="flex gap-1 flex-wrap justify-end">
-                        {currentCard.tags.map(tagId => (
-                          <span key={tagId} className="px-2 py-1 bg-gray-800/50 text-gray-300 rounded text-xs">
-                            {getTagName(tagId)}
-                          </span>
-                        ))}
+                    {/* Category and Tags */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-sm font-medium">
+                          {getCategoryName(currentCard.categoryId)}
+                        </span>
                       </div>
+                      {currentCard.tags && currentCard.tags.length > 0 && (
+                        <div className="flex gap-2 flex-wrap">
+                          {currentCard.tags.map(tagId => {
+                            const tagName = getTagName(tagId);
+                            console.log(`🏷️ Rendering tag:`, { tagId, tagName, found: tagName !== '—' });
+                            return (
+                              <span key={tagId} className="px-3 py-1.5 bg-blue-600/30 text-blue-300 rounded-full text-sm font-medium border border-blue-500/30">
+                                {tagName}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                     
                     {currentCard.imageUrl && (
