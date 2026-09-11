@@ -17,19 +17,23 @@ export const useCards = (entityType?: EntityType) => {
   return useQuery({
     queryKey: ['cards', entityType],
     queryFn: async () => {
+      console.log('🔍 Loading cards for entityType:', entityType);
       const q = entityType 
         ? query(collection(db, 'cards'), where('entityType', '==', entityType))
         : collection(db, 'cards');
       const snapshot = await getDocs(q);
       const cards = snapshot.docs.map(d => {
         const data = d.data();
-        console.log(`Card ${d.id} from Firestore:`, {
+        console.log(`✅ Card loaded from Firestore:`, {
+          id: d.id,
           hasImageUrl: !!data.imageUrl,
           imageUrlLength: data.imageUrl?.length || 0,
-          imageUrlPreview: data.imageUrl ? `${data.imageUrl.substring(0, 50)}...` : 'undefined'
+          tags: data.tags || [],
+          tagsCount: data.tags?.length || 0
         });
         return { id: d.id, ...data } as Card;
       });
+      console.log(`📊 Total cards loaded: ${cards.length} for entityType:`, entityType);
       return cards;
     },
   });
@@ -126,20 +130,21 @@ export const useTags = (entityType?: EntityType) => {
   return useQuery({
     queryKey: ['tags', entityType],
     queryFn: async () => {
+      console.log('🔍 Loading tags for entityType:', entityType);
       const q = entityType
         ? query(collection(db, 'tags'), where('entityType', '==', entityType))
         : collection(db, 'tags');
       const snapshot = await getDocs(q);
       const tags = snapshot.docs.map(d => {
         const data = d.data();
-        console.log(`Tag ${d.id} from Firestore:`, {
+        console.log(`✅ Tag loaded from Firestore:`, {
           id: d.id,
           name: data.name,
           entityType: data.entityType
         });
         return { id: d.id, ...data } as Tag;
       });
-      console.log(`Loaded ${tags.length} tags for entityType:`, entityType);
+      console.log(`📊 Total tags loaded: ${tags.length} for entityType:`, entityType);
       return tags;
     },
   });

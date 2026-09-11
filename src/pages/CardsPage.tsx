@@ -242,25 +242,26 @@ const CardsPage: React.FC = () => {
                 <div className={`grid transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                   {/* Front */}
                   <div className="col-start-1 row-start-1 backface-hidden glass rounded-3xl p-8 shadow-2xl">
-                    <div className="flex justify-between items-start mb-6">
-                      <span className="px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-sm">
-                        {getCategoryName(currentCard.categoryId)}
-                      </span>
-                      <div className="flex gap-1 flex-wrap justify-end">
-                        {currentCard.tags && currentCard.tags.length > 0 ? (
-                          currentCard.tags.map(tagId => {
+                    {/* Category and Tags */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-sm font-medium">
+                          {getCategoryName(currentCard.categoryId)}
+                        </span>
+                      </div>
+                      {currentCard.tags && currentCard.tags.length > 0 && (
+                        <div className="flex gap-2 flex-wrap">
+                          {currentCard.tags.map(tagId => {
                             const tagName = getTagName(tagId);
                             console.log(`🏷️ Rendering tag:`, { tagId, tagName, found: tagName !== '—' });
                             return (
-                              <span key={tagId} className="px-2 py-1 bg-gray-800/50 text-gray-300 rounded text-xs">
+                              <span key={tagId} className="px-3 py-1.5 bg-blue-600/30 text-blue-300 rounded-full text-sm font-medium border border-blue-500/30">
                                 {tagName}
                               </span>
                             );
-                          })
-                        ) : (
-                          <span className="text-xs text-gray-500 italic">Нет тегов</span>
-                        )}
-                      </div>
+                          })}
+                        </div>
+                      )}
                     </div>
                     
                     {currentCard.imageUrl && (
