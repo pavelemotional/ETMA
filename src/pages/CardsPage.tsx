@@ -33,15 +33,23 @@ const CardsPage: React.FC = () => {
 
   const currentCard = filteredCards[currentIndex];
 
-  // Отладка: логируем текущую карточку
+  // Отладка: логируем текущую карточку и теги
   if (currentCard) {
     console.log('Current card:', {
       id: currentCard.id,
       imageUrl: currentCard.imageUrl ? `${currentCard.imageUrl.substring(0, 50)}...` : 'undefined',
       hasImageUrl: !!currentCard.imageUrl,
-      imageUrlLength: currentCard.imageUrl?.length || 0
+      imageUrlLength: currentCard.imageUrl?.length || 0,
+      tags: currentCard.tags,
+      tagsCount: currentCard.tags?.length || 0
     });
   }
+
+  // Отладка: логируем загруженные теги
+  console.log('Loaded tags:', {
+    count: tags.length,
+    tags: tags.map(t => ({ id: t.id, name: t.name, entityType: t.entityType }))
+  });
 
   const markStudied = async (correct: boolean) => {
     if (!currentCard || !user) return;
@@ -232,11 +240,19 @@ const CardsPage: React.FC = () => {
                         {getCategoryName(currentCard.categoryId)}
                       </span>
                       <div className="flex gap-1 flex-wrap justify-end">
-                        {currentCard.tags.map(tagId => (
-                          <span key={tagId} className="px-2 py-1 bg-gray-800/50 text-gray-300 rounded text-xs">
-                            {getTagName(tagId)}
-                          </span>
-                        ))}
+                        {currentCard.tags && currentCard.tags.length > 0 ? (
+                          currentCard.tags.map(tagId => {
+                            const tagName = getTagName(tagId);
+                            console.log(`Rendering tag ${tagId}: ${tagName}`);
+                            return (
+                              <span key={tagId} className="px-2 py-1 bg-gray-800/50 text-gray-300 rounded text-xs">
+                                {tagName}
+                              </span>
+                            );
+                          })
+                        ) : (
+                          <span className="text-xs text-gray-500">Нет тегов</span>
+                        )}
                       </div>
                     </div>
                     

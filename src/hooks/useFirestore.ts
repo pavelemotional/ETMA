@@ -130,7 +130,17 @@ export const useTags = (entityType?: EntityType) => {
         ? query(collection(db, 'tags'), where('entityType', '==', entityType))
         : collection(db, 'tags');
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Tag));
+      const tags = snapshot.docs.map(d => {
+        const data = d.data();
+        console.log(`Tag ${d.id} from Firestore:`, {
+          id: d.id,
+          name: data.name,
+          entityType: data.entityType
+        });
+        return { id: d.id, ...data } as Tag;
+      });
+      console.log(`Loaded ${tags.length} tags for entityType:`, entityType);
+      return tags;
     },
   });
 };
