@@ -23,6 +23,7 @@ const CardsPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [excludedCards, setExcludedCards] = useState<Set<string>>(new Set());
 
   const loading = cardsLoading || categoriesLoading || tagsLoading || fieldsLoading;
   const error = cardsError;
@@ -30,6 +31,7 @@ const CardsPage: React.FC = () => {
   const filteredCards = cards.filter(card => {
     if (selectedCategory !== 'all' && card.categoryId !== selectedCategory) return false;
     if (selectedTags.length > 0 && !selectedTags.some(t => card.tags.includes(t))) return false;
+    if (excludedCards.has(card.id)) return false;
     return true;
   });
 
@@ -90,29 +92,37 @@ const CardsPage: React.FC = () => {
     }
     
     setIsFlipped(false);
-    // Умная система: выбираем следующую карточку с меньшим счетчиком
-    selectNextCard();
+    
+    // Исключаем текущую карточку из колоды
+    const newExcluded = new Set(excludedCards);
+    newExcluded.add(currentCard.id);
+    setExcludedCards(newExcluded);
+    
+    // Переходим к следующей карточке
+    if (filteredCards.length > 1) {
+      setCurrentIndex(0);
+    }
   };
 
-  const selectNextCard = () => {
-    if (filteredCards.length === 0) return;
+  const skipCard = () => {
+    if (!currentCard) return;
     
-    // Сортируем карточки по количеству правильных ответов (меньше = приоритетнее)
-    const sortedCards = [...filteredCards].sort((a, b) => {
-      const progA = progress[`${user?.id}_${a.id}`];
-      const progB = progress[`${user?.id}_${b.id}`];
-      const correctA = progA?.timesCorrect || 0;
-      const correctB = progB?.timesCorrect || 0;
-      return correctA - correctB;
-    });
+    // Исключаем текущую карточку из колоды
+    const newExcluded = new Set(excludedCards);
+    newExcluded.add(currentCard.id);
+    setExcludedCards(newExcluded);
     
-    // Берем одну из первых 3 карточек с наименьшим счетчиком (рандомизация)
-    const topCards = sortedCards.slice(0, Math.min(3, sortedCards.length));
-    const randomIndex = Math.floor(Math.random() * topCards.length);
-    const nextCard = topCards[randomIndex];
-    
-    const newIndex = filteredCards.findIndex(c => c.id === nextCard.id);
-    setCurrentIndex(newIndex >= 0 ? newIndex : 0);
+    // Переходим к следующей карточке
+    if (filteredCards.length > 1) {
+      setCurrentIndex(0);
+    }
+    setIsFlipped(false);
+  };
+
+  const restartDeck = () => {
+    setExcludedCards(new Set());
+    setCurrentIndex(0);
+    setIsFlipped(false);
   };
 
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || '—';
@@ -385,17 +395,17 @@ const CardsPage: React.FC = () => {
                 <div className="flex gap-2 md:gap-4 w-full max-w-md justify-center">
                   {!isFlipped && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); selectNextCard(); }}
+                      onClick={(e) => { e.stopPropagation(); skipCard(); }}
                       className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl transition font-medium text-xs md:text-sm"
                     >
                       ⏭️ Пропустить
                     </button>
                   )}
                   <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentIndex(0); setIsFlipped(false); }}
+                    onClick={(e) => { e.stopPropagation(); restartDeck(); }}
                     className="px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl transition font-medium text-xs md:text-sm"
                   >
-                    🔄 Перезапустить
+                    🔄 Перезапустить колоду
                   </button>
                 </div>
               </div>
