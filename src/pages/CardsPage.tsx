@@ -218,11 +218,17 @@ const CardsPage: React.FC = () => {
 
         {/* Card Display */}
         {filteredCards.length === 0 ? (
-          <EmptyState 
-            icon="📭" 
-            title="Нет карточек для отображения"
-            description="Попробуйте изменить фильтры или добавьте карточки"
-          />
+          <div className="text-center py-20 animate-fade-in">
+            <div className="text-6xl mb-4">🎉</div>
+            <h3 className="text-xl font-semibold text-gray-300 mb-2">Колода пройдена!</h3>
+            <p className="text-gray-500 mb-6">Вы просмотрели все карточки</p>
+            <button
+              onClick={restartDeck}
+              className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl transition font-medium hover-lift"
+            >
+              🔄 Перезапустить колоду
+            </button>
+          </div>
         ) : currentCard ? (
           <div className="flex flex-col items-center animate-fade-in pb-32 md:pb-36">
             {/* Progress indicator */}
@@ -365,48 +371,48 @@ const CardsPage: React.FC = () => {
                   )}
                 </div>
               )}
-
-              {/* Buttons - Fixed at bottom */}
-              <div className="fixed bottom-4 left-0 right-0 flex flex-col items-center gap-2 md:gap-4 z-40 px-4">
-                {/* Study mode controls */}
-                {isFlipped && (
-                  <div className="flex gap-2 md:gap-4 animate-fade-in w-full max-w-md justify-center">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); markStudied(false); }}
-                      className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl transition font-medium text-xs md:text-sm"
-                    >
-                      ❌ Неправильно
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); markStudied(true); }}
-                      className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition font-medium text-xs md:text-sm"
-                    >
-                      ✅ Правильно
-                    </button>
-                  </div>
-                )}
-
-                {/* Skip and Restart */}
-                <div className="flex gap-2 md:gap-4 w-full max-w-md justify-center">
-                  {!isFlipped && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); skipCard(); }}
-                      className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl transition font-medium text-xs md:text-sm"
-                    >
-                      ⏭️ Пропустить
-                    </button>
-                  )}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); restartDeck(); }}
-                    className="px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl transition font-medium text-xs md:text-sm"
-                  >
-                    🔄 Перезапустить колоду
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         ) : null}
+
+        {/* Fixed buttons at bottom - always visible */}
+        <div className="fixed bottom-4 left-0 right-0 flex flex-col items-center gap-2 md:gap-4 z-40 px-4">
+          {/* Study mode controls - only when card exists */}
+          {currentCard && isFlipped && (
+            <div className="flex gap-2 md:gap-4 animate-fade-in w-full max-w-md justify-center">
+              <button
+                onClick={(e) => { e.stopPropagation(); markStudied(false); }}
+                className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl transition font-medium text-xs md:text-sm"
+              >
+                ❌ Неправильно
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); markStudied(true); }}
+                className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition font-medium text-xs md:text-sm"
+              >
+                ✅ Правильно
+              </button>
+            </div>
+          )}
+
+          {/* Skip and Restart */}
+          <div className="flex gap-2 md:gap-4 w-full max-w-md justify-center">
+            {currentCard && !isFlipped && (
+              <button
+                onClick={(e) => { e.stopPropagation(); skipCard(); }}
+                className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl transition font-medium text-xs md:text-sm"
+              >
+                ⏭️ Пропустить
+              </button>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); restartDeck(); }}
+              className="px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl transition font-medium text-xs md:text-sm"
+            >
+              🔄 Перезапустить колоду
+            </button>
+          </div>
+        </div>
 
         {/* Edit Card Modal */}
         {showEditModal && currentCard && user?.isAdmin && (
