@@ -381,21 +381,21 @@ const CardsPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Navigation */}
-                <div className="flex gap-2 md:gap-4">
+                {/* Skip and Restart */}
+                <div className="flex gap-2 md:gap-4 w-full max-w-md justify-center">
+                  {!isFlipped && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); selectNextCard(); }}
+                      className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl transition font-medium text-xs md:text-sm"
+                    >
+                      ⏭️ Пропустить
+                    </button>
+                  )}
                   <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentIndex(prev => Math.max(0, prev - 1)); setIsFlipped(false); }}
-                    disabled={currentIndex === 0}
-                    className="px-3 md:px-4 py-2 glass hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition text-xs md:text-sm"
+                    onClick={(e) => { e.stopPropagation(); setCurrentIndex(0); setIsFlipped(false); }}
+                    className="px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl transition font-medium text-xs md:text-sm"
                   >
-                    ← Назад
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentIndex(prev => Math.min(filteredCards.length - 1, prev + 1)); setIsFlipped(false); }}
-                    disabled={currentIndex >= filteredCards.length - 1}
-                    className="px-3 md:px-4 py-2 glass hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition text-xs md:text-sm"
-                  >
-                    Вперёд →
+                    🔄 Перезапустить
                   </button>
                 </div>
               </div>
