@@ -243,9 +243,9 @@ const CardsPage: React.FC = () => {
               >
                 <div className={`grid transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                   {/* Front */}
-                  <div className="col-start-1 row-start-1 backface-hidden glass rounded-3xl p-4 md:p-8 shadow-2xl max-h-[60vh] overflow-y-auto">
+                  <div className="col-start-1 row-start-1 backface-hidden glass rounded-3xl p-4 md:p-6 shadow-2xl">
                     {/* Category and Tags */}
-                    <div className="mb-3 md:mb-6">
+                    <div className="mb-3">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="px-2 md:px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-xs md:text-sm font-medium">
                           {getCategoryName(currentCard.categoryId)}
@@ -266,12 +266,12 @@ const CardsPage: React.FC = () => {
                     </div>
                     
                     {currentCard.imageUrl && (
-                      <div className="mb-3 md:mb-6 bg-gray-900 rounded-xl overflow-hidden">
-                        <img src={currentCard.imageUrl} alt="" className="w-full h-24 md:h-48 object-contain" />
+                      <div className="mb-3 bg-gray-900 rounded-xl overflow-hidden">
+                        <img src={currentCard.imageUrl} alt="" className="w-full h-32 md:h-48 object-contain" />
                       </div>
                     )}
 
-                    <div className="flex flex-col items-center justify-center py-4 md:py-8">
+                    <div className="flex flex-col items-center justify-center py-3 md:py-4">
                       {fields.slice(0, 1).map(field => {
                         const value = currentCard.fields[field.id];
                         if (!value) return null;
@@ -291,26 +291,26 @@ const CardsPage: React.FC = () => {
                   </div>
 
                   {/* Back */}
-                  <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 glass rounded-3xl p-4 md:p-8 shadow-2xl max-h-[60vh] overflow-y-auto">
+                  <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 glass rounded-3xl p-4 md:p-6 shadow-2xl max-h-[70vh] overflow-y-auto">
                     {currentCard.imageUrl && (
-                      <div className="mb-3 md:mb-6 bg-gray-900 rounded-xl overflow-hidden">
-                        <img src={currentCard.imageUrl} alt="" className="w-full h-24 md:h-48 object-contain" />
+                      <div className="mb-3 bg-gray-900 rounded-xl overflow-hidden">
+                        <img src={currentCard.imageUrl} alt="" className="w-full h-32 md:h-48 object-contain" />
                       </div>
                     )}
-                    <h3 className="text-base md:text-xl font-bold text-white mb-3 md:mb-6 text-center">Полная информация</h3>
-                    <div className="space-y-2 md:space-y-4">
+                    <h3 className="text-base md:text-xl font-bold text-white mb-3 text-center">Полная информация</h3>
+                    <div className="space-y-2 md:space-y-3">
                       {fields.map(field => {
                         const value = currentCard.fields[field.id];
                         if (!value) return null;
                         return (
-                          <div key={field.id} className="border-b border-gray-700 pb-2 md:pb-3">
+                          <div key={field.id} className="border-b border-gray-700 pb-2">
                             <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">{field.name}</div>
                             <div className="text-xs md:text-base text-white leading-relaxed">{value}</div>
                           </div>
                         );
                       })}
                     </div>
-                    <div className="text-center text-gray-500 text-xs mt-3 md:mt-6">
+                    <div className="text-center text-gray-500 text-xs mt-3">
                       {isFlipped ? 'Нажмите, чтобы перевернуть обратно' : ''}
                     </div>
                   </div>
