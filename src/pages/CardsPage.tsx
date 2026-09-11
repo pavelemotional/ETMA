@@ -23,6 +23,7 @@ const CardsPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [excludedCards, setExcludedCards] = useState<Set<string>>(new Set());
 
   const loading = cardsLoading || categoriesLoading || tagsLoading || fieldsLoading;
   const error = cardsError;
@@ -30,6 +31,7 @@ const CardsPage: React.FC = () => {
   const filteredCards = cards.filter(card => {
     if (selectedCategory !== 'all' && card.categoryId !== selectedCategory) return false;
     if (selectedTags.length > 0 && !selectedTags.some(t => card.tags.includes(t))) return false;
+    if (excludedCards.has(card.id)) return false;
     return true;
   });
 
@@ -90,29 +92,37 @@ const CardsPage: React.FC = () => {
     }
     
     setIsFlipped(false);
-    // Умная система: выбираем следующую карточку с меньшим счетчиком
-    selectNextCard();
+    
+    // Исключаем текущую карточку из колоды
+    const newExcluded = new Set(excludedCards);
+    newExcluded.add(currentCard.id);
+    setExcludedCards(newExcluded);
+    
+    // Переходим к следующей карточке
+    if (filteredCards.length > 1) {
+      setCurrentIndex(0);
+    }
   };
 
-  const selectNextCard = () => {
-    if (filteredCards.length === 0) return;
+  const skipCard = () => {
+    if (!currentCard) return;
     
-    // Сортируем карточки по количеству правильных ответов (меньше = приоритетнее)
-    const sortedCards = [...filteredCards].sort((a, b) => {
-      const progA = progress[`${user?.id}_${a.id}`];
-      const progB = progress[`${user?.id}_${b.id}`];
-      const correctA = progA?.timesCorrect || 0;
-      const correctB = progB?.timesCorrect || 0;
-      return correctA - correctB;
-    });
+    // Исключаем текущую карточку из колоды
+    const newExcluded = new Set(excludedCards);
+    newExcluded.add(currentCard.id);
+    setExcludedCards(newExcluded);
     
-    // Берем одну из первых 3 карточек с наименьшим счетчиком (рандомизация)
-    const topCards = sortedCards.slice(0, Math.min(3, sortedCards.length));
-    const randomIndex = Math.floor(Math.random() * topCards.length);
-    const nextCard = topCards[randomIndex];
-    
-    const newIndex = filteredCards.findIndex(c => c.id === nextCard.id);
-    setCurrentIndex(newIndex >= 0 ? newIndex : 0);
+    // Переходим к следующей карточке
+    if (filteredCards.length > 1) {
+      setCurrentIndex(0);
+    }
+    setIsFlipped(false);
+  };
+
+  const restartDeck = () => {
+    setExcludedCards(new Set());
+    setCurrentIndex(0);
+    setIsFlipped(false);
   };
 
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || '—';
@@ -243,9 +253,9 @@ const CardsPage: React.FC = () => {
               >
                 <div className={`grid transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                   {/* Front */}
-                  <div className="col-start-1 row-start-1 backface-hidden glass rounded-3xl p-4 md:p-8 shadow-2xl max-h-[60vh] overflow-y-auto">
+                  <div className="col-start-1 row-start-1 backface-hidden glass rounded-3xl p-4 md:p-6 shadow-2xl">
                     {/* Category and Tags */}
-                    <div className="mb-3 md:mb-6">
+                    <div className="mb-3">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="px-2 md:px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-xs md:text-sm font-medium">
                           {getCategoryName(currentCard.categoryId)}
@@ -266,12 +276,12 @@ const CardsPage: React.FC = () => {
                     </div>
                     
                     {currentCard.imageUrl && (
-                      <div className="mb-3 md:mb-6 bg-gray-900 rounded-xl overflow-hidden">
-                        <img src={currentCard.imageUrl} alt="" className="w-full h-24 md:h-48 object-contain" />
+                      <div className="mb-3 bg-gray-900 rounded-xl overflow-hidden">
+                        <img src={currentCard.imageUrl} alt="" className="w-full h-32 md:h-48 object-contain" />
                       </div>
                     )}
 
-                    <div className="flex flex-col items-center justify-center py-4 md:py-8">
+                    <div className="flex flex-col items-center justify-center py-3 md:py-4">
                       {fields.slice(0, 1).map(field => {
                         const value = currentCard.fields[field.id];
                         if (!value) return null;
@@ -291,26 +301,47 @@ const CardsPage: React.FC = () => {
                   </div>
 
                   {/* Back */}
-                  <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 glass rounded-3xl p-4 md:p-8 shadow-2xl max-h-[60vh] overflow-y-auto">
+                  <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 glass rounded-3xl p-4 md:p-6 shadow-2xl max-h-[70vh] overflow-y-auto">
+                    {/* Category and Tags */}
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 md:px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-xs md:text-sm font-medium">
+                          {getCategoryName(currentCard.categoryId)}
+                        </span>
+                      </div>
+                      {currentCard.tags && currentCard.tags.length > 0 && (
+                        <div className="flex gap-1.5 md:gap-2 flex-wrap">
+                          {currentCard.tags.map(tagId => {
+                            const tagName = getTagName(tagId);
+                            return (
+                              <span key={tagId} className="px-2 md:px-3 py-0.5 md:py-1 bg-blue-600/30 text-blue-300 rounded-full text-xs md:text-sm font-medium border border-blue-500/30">
+                                {tagName}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    
                     {currentCard.imageUrl && (
-                      <div className="mb-3 md:mb-6 bg-gray-900 rounded-xl overflow-hidden">
-                        <img src={currentCard.imageUrl} alt="" className="w-full h-24 md:h-48 object-contain" />
+                      <div className="mb-3 bg-gray-900 rounded-xl overflow-hidden">
+                        <img src={currentCard.imageUrl} alt="" className="w-full h-32 md:h-48 object-contain" />
                       </div>
                     )}
-                    <h3 className="text-base md:text-xl font-bold text-white mb-3 md:mb-6 text-center">Полная информация</h3>
-                    <div className="space-y-2 md:space-y-4">
+                    <h3 className="text-base md:text-xl font-bold text-white mb-3 text-center">Полная информация</h3>
+                    <div className="space-y-2 md:space-y-3">
                       {fields.map(field => {
                         const value = currentCard.fields[field.id];
                         if (!value) return null;
                         return (
-                          <div key={field.id} className="border-b border-gray-700 pb-2 md:pb-3">
+                          <div key={field.id} className="border-b border-gray-700 pb-2">
                             <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">{field.name}</div>
                             <div className="text-xs md:text-base text-white leading-relaxed">{value}</div>
                           </div>
                         );
                       })}
                     </div>
-                    <div className="text-center text-gray-500 text-xs mt-3 md:mt-6">
+                    <div className="text-center text-gray-500 text-xs mt-3">
                       {isFlipped ? 'Нажмите, чтобы перевернуть обратно' : ''}
                     </div>
                   </div>
@@ -360,21 +391,21 @@ const CardsPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Navigation */}
-                <div className="flex gap-2 md:gap-4">
+                {/* Skip and Restart */}
+                <div className="flex gap-2 md:gap-4 w-full max-w-md justify-center">
+                  {!isFlipped && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); skipCard(); }}
+                      className="flex-1 px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl transition font-medium text-xs md:text-sm"
+                    >
+                      ⏭️ Пропустить
+                    </button>
+                  )}
                   <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentIndex(prev => Math.max(0, prev - 1)); setIsFlipped(false); }}
-                    disabled={currentIndex === 0}
-                    className="px-3 md:px-4 py-2 glass hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition text-xs md:text-sm"
+                    onClick={(e) => { e.stopPropagation(); restartDeck(); }}
+                    className="px-3 md:px-6 py-2 md:py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl transition font-medium text-xs md:text-sm"
                   >
-                    ← Назад
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentIndex(prev => Math.min(filteredCards.length - 1, prev + 1)); setIsFlipped(false); }}
-                    disabled={currentIndex >= filteredCards.length - 1}
-                    className="px-3 md:px-4 py-2 glass hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition text-xs md:text-sm"
-                  >
-                    Вперёд →
+                    🔄 Перезапустить колоду
                   </button>
                 </div>
               </div>
