@@ -20,7 +20,6 @@ const CardsPage: React.FC = () => {
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [excludedCards, setExcludedCards] = useState<Set<string>>(new Set());
@@ -28,14 +27,21 @@ const CardsPage: React.FC = () => {
   const loading = cardsLoading || categoriesLoading || tagsLoading || fieldsLoading;
   const error = cardsError;
 
-  const filteredCards = cards.filter(card => {
-    if (selectedCategory !== 'all' && card.categoryId !== selectedCategory) return false;
-    if (selectedTags.length > 0 && !selectedTags.some(t => card.tags.includes(t))) return false;
-    if (excludedCards.has(card.id)) return false;
-    return true;
-  });
+  const filteredCards = cards
+    .filter(card => {
+      if (selectedCategory !== 'all' && card.categoryId !== selectedCategory) return false;
+      if (selectedTags.length > 0 && !selectedTags.some(t => card.tags.includes(t))) return false;
+      if (excludedCards.has(card.id)) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      // Сортируем по количеству правильных ответов (от меньшего к большему)
+      const correctA = progress[`${user?.id}_${a.id}`]?.timesCorrect || 0;
+      const correctB = progress[`${user?.id}_${b.id}`]?.timesCorrect || 0;
+      return correctA - correctB;
+    });
 
-  const currentCard = filteredCards[currentIndex];
+  const currentCard = filteredCards[0]; // Всегда показываем первую карточку (самую сложную)
 
   // Отладка: логируем текущую карточку и теги
   if (currentCard) {
@@ -97,11 +103,6 @@ const CardsPage: React.FC = () => {
     const newExcluded = new Set(excludedCards);
     newExcluded.add(currentCard.id);
     setExcludedCards(newExcluded);
-    
-    // Переходим к следующей карточке
-    if (filteredCards.length > 1) {
-      setCurrentIndex(0);
-    }
   };
 
   const skipCard = () => {
@@ -112,16 +113,11 @@ const CardsPage: React.FC = () => {
     newExcluded.add(currentCard.id);
     setExcludedCards(newExcluded);
     
-    // Переходим к следующей карточке
-    if (filteredCards.length > 1) {
-      setCurrentIndex(0);
-    }
     setIsFlipped(false);
   };
 
   const restartDeck = () => {
     setExcludedCards(new Set());
-    setCurrentIndex(0);
     setIsFlipped(false);
   };
 
@@ -162,7 +158,7 @@ const CardsPage: React.FC = () => {
             {/* Categories */}
             <div className="flex flex-wrap gap-1.5">
               <button
-                onClick={() => { setSelectedCategory('all'); setCurrentIndex(0); setIsFlipped(false); }}
+                onClick={() => { setSelectedCategory('all'); setIsFlipped(false); }}
                 className={`px-2.5 py-1 rounded-full text-xs transition ${
                   selectedCategory === 'all'
                     ? 'bg-purple-600 text-white'
@@ -174,7 +170,7 @@ const CardsPage: React.FC = () => {
               {categories.map(cat => (
                 <button
                   key={cat.id}
-                  onClick={() => { setSelectedCategory(cat.id); setCurrentIndex(0); setIsFlipped(false); }}
+                  onClick={() => { setSelectedCategory(cat.id); setIsFlipped(false); }}
                   className={`px-2.5 py-1 rounded-full text-xs transition ${
                     selectedCategory === cat.id
                       ? 'bg-purple-600 text-white'
@@ -199,7 +195,6 @@ const CardsPage: React.FC = () => {
                       setSelectedTags(prev => 
                         prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id]
                       );
-                      setCurrentIndex(0);
                       setIsFlipped(false);
                     }}
                     className={`px-2 py-0.5 rounded-full text-xs transition ${
@@ -233,13 +228,13 @@ const CardsPage: React.FC = () => {
             {/* Progress indicator */}
             <div className="w-full max-w-2xl mb-4">
               <div className="flex justify-between text-sm text-gray-400 mb-1">
-                <span>Карточка {currentIndex + 1} из {filteredCards.length}</span>
-                <span>{Math.round(((currentIndex + 1) / filteredCards.length) * 100)}%</span>
+                <span>Осталось карточек: {filteredCards.length}</span>
+                <span>{filteredCards.length > 0 ? '1' : '0'} из {cards.filter(c => !excludedCards.has(c.id)).length + excludedCards.size}</span>
               </div>
               <div className="w-full bg-gray-800 rounded-full h-2">
                 <div
                   className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${((currentIndex + 1) / filteredCards.length) * 100}%` }}
+                  style={{ width: `${cards.length > 0 ? (excludedCards.size / cards.length) * 100 : 0}%` }}
                 />
               </div>
             </div>
