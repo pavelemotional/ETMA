@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { EntityType, ENTITY_LABELS, ENTITY_ICONS, StudyProgress } from '../types';
 import { useCards, useCategories, useTags, useFieldDefinitions, useStudyProgress } from '../hooks/useFirestore';
 import { ErrorDisplay, LoadingDisplay, EmptyState } from '../components/UI';
+import EditCardModal from '../components/EditCardModal';
 
 const CardsPage: React.FC = () => {
   const { entityType } = useParams<{ entityType: EntityType }>();
@@ -21,6 +22,7 @@ const CardsPage: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const loading = cardsLoading || categoriesLoading || tagsLoading || fieldsLoading;
   const error = cardsError;
@@ -315,15 +317,26 @@ const CardsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Progress counter */}
+              {/* Progress counter & Edit button */}
               {currentCard && user && (
-                <div className="absolute top-4 right-4 z-10">
+                <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
                   <div className="glass rounded-full px-2 md:px-4 py-1 md:py-2 flex items-center gap-1">
                     <span className="text-green-400 text-xs md:text-sm font-bold">
                       {progress[`${user.id}_${currentCard.id}`]?.timesCorrect || 0}
                     </span>
                     <span className="text-gray-400 text-xs">правильных</span>
                   </div>
+                  {user.isAdmin && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowEditModal(true); }}
+                      className="glass rounded-full p-2 hover:bg-white/10 transition"
+                      title="Редактировать карточку"
+                    >
+                      <svg className="w-4 h-4 md:w-5 md:h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -368,6 +381,21 @@ const CardsPage: React.FC = () => {
             </div>
           </div>
         ) : null}
+
+        {/* Edit Card Modal */}
+        {showEditModal && currentCard && user?.isAdmin && (
+          <EditCardModal
+            card={currentCard}
+            categories={categories}
+            tags={tags}
+            fields={fields}
+            onClose={() => setShowEditModal(false)}
+            onSave={() => {
+              refetchCards();
+              setShowEditModal(false);
+            }}
+          />
+        )}
       </div>
     </div>
   );
