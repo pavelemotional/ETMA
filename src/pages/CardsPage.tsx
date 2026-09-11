@@ -292,6 +292,27 @@ const CardsPage: React.FC = () => {
 
                   {/* Back */}
                   <div className="col-start-1 row-start-1 backface-hidden rotate-y-180 glass rounded-3xl p-4 md:p-6 shadow-2xl max-h-[70vh] overflow-y-auto">
+                    {/* Category and Tags */}
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 md:px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-xs md:text-sm font-medium">
+                          {getCategoryName(currentCard.categoryId)}
+                        </span>
+                      </div>
+                      {currentCard.tags && currentCard.tags.length > 0 && (
+                        <div className="flex gap-1.5 md:gap-2 flex-wrap">
+                          {currentCard.tags.map(tagId => {
+                            const tagName = getTagName(tagId);
+                            return (
+                              <span key={tagId} className="px-2 md:px-3 py-0.5 md:py-1 bg-blue-600/30 text-blue-300 rounded-full text-xs md:text-sm font-medium border border-blue-500/30">
+                                {tagName}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    
                     {currentCard.imageUrl && (
                       <div className="mb-3 bg-gray-900 rounded-xl overflow-hidden">
                         <img src={currentCard.imageUrl} alt="" className="w-full h-32 md:h-48 object-contain" />
